@@ -49,9 +49,10 @@ independently. The same proof cannot raise two parameters.
 ## Milestones
 
 Each has an acceptance test and a cut-down fallback. **Do not start N+1 before N
-passes.**
+passes.** Tick the box when the acceptance test actually passes — `build` picks the
+first unticked milestone, so this is the source of truth for where we are.
 
-### M0 · 10:30–11:00 · De-risk before building
+### [ ] M0 · 10:30–11:00 · De-risk before building
 - Disclose the borderline starting point to a mentor. Get a name.
 - Verify on the **event account**: Saaras v3 accepts `mode=verbatim`; Bulbul v3
   returns audio; the LLM surface is reachable. Check rate limits.
@@ -59,19 +60,19 @@ passes.**
 - **If behind:** if verbatim is unavailable the creativity thesis changes — decide
   immediately, do not discover this at 15:00.
 
-### M1 · 11:00–12:15 · One ugly end-to-end pass
+### [ ] M1 · 11:00–12:15 · One ugly end-to-end pass
 Hardcode one word. Record in the browser, send to Saaras, compare to the target,
 speak a reply with Bulbul. No styling, no database, no login.
 - **Accept:** press a button, speak, hear a spoken judgement. Repeatable twice.
 - **If behind:** drop TTS; show the judgement as text. Ship the loop.
 
-### M2 · 12:15–13:30 · Word practice with real scoring
+### [ ] M2 · 12:15–13:30 · Word practice with real scoring
 The drill from M1 over a small word list, with difficulty levels and a score per
 attempt persisted to SQLite.
 - **Accept:** finish a 5-word session; scores survive a page reload.
 - **If behind:** one difficulty level, no levels UI.
 
-### M3 · 13:30–14:45 · The judge and the comparison *(the scored axis)*
+### [ ] M3 · 13:30–14:45 · The judge and the comparison *(the scored axis)*
 Run the same audio through `mode=verbatim` and `mode=transcribe`. Show both
 transcripts. Sarvam LLM scores the attempt against the target with a reason.
 - **Accept:** on deliberately disfluent speech, the two transcripts visibly differ
@@ -79,7 +80,7 @@ transcripts. Sarvam LLM scores the attempt against the target with a reason.
 - **If behind:** drop the LLM; show the two transcripts alone. The comparison *is*
   the creativity proof — protect it over everything else in this milestone.
 
-### M4 · 14:45–15:30 · Patient and clinician continuity
+### [ ] M4 · 14:45–15:30 · Patient and clinician continuity
 Patient identity, session history, and a clinician view listing their patients with
 per-patient progress.
 - **Accept:** a returning patient's prior attempts are visible; a second patient
@@ -87,7 +88,7 @@ per-patient progress.
 - **If behind:** patient history only, no clinician view. History is the Memory
   proof; the dashboard is decoration.
 
-### M5 · 15:30–16:30 · Demo hardening — **build nothing new**
+### [ ] M5 · 15:30–16:30 · Demo hardening — **build nothing new**
 Reset state. Run the golden path three times. Record the fallback video. Verify the
 public link on a phone. Write submission notes including the borderline flag. Two
 timed rehearsals against the clock.

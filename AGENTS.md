@@ -10,11 +10,50 @@ Read it before proposing or making any change.
 1. Read `SCOPE.md` — what we are building, the locked decisions, milestones.
 2. Read the tail of `DECISIONS.md` — what was already decided today and why.
 3. Run `git log --oneline -15` — what already works.
-4. Identify the **active milestone** and its acceptance test.
-5. Only then propose the next change.
+4. Identify the **active milestone**: the first unticked `### [ ] Mn` in `SCOPE.md`.
+5. Read `UI.md` before touching anything user-facing.
+6. Only then propose the next change.
 
 If you are joining mid-build with no memory of earlier turns, steps 1–3 restore
 the working state. Do not ask the builder to re-explain the project.
+
+## Commands the builder will type
+
+He is solo and on the clock. Treat these single words as full instructions and act
+without asking for confirmation.
+
+### `build`
+
+Build **the next unchecked milestone in `SCOPE.md`, and only that one.**
+
+1. Say in one line which milestone you are starting and its acceptance test.
+2. Implement it. Follow `UI.md` for anything user-facing.
+3. Run the acceptance test and show the actual result — not a claim that it passed.
+4. `git commit` with a real message.
+5. Tick the milestone box in `SCOPE.md`; append one line to `DECISIONS.md`.
+6. Answer the four checkpoint questions below, briefly.
+7. **Stop.** Do not roll into the next milestone. He decides whether to continue,
+   cut, or fix.
+
+If the acceptance test fails, fix it before committing. If it cannot pass within
+the milestone's time box, apply that milestone's "if behind" fallback, say clearly
+that you did, and commit the fallback.
+
+### `status`
+
+No changes. Report: active milestone, what is verified working, elapsed vs the
+schedule in `SCOPE.md`, largest demo risk, recommended cut. Five lines maximum.
+
+### `cut`
+
+Scope is at risk. Propose the smallest set of removals that still leaves a
+demonstrable golden path, name what each cut costs on the rubric, and wait for a
+decision before touching anything.
+
+### `demo`
+
+Run the golden path end to end as a judge would, from a reset state. Report
+anything that breaks, is slow, or needs explaining. Change nothing unless asked.
 
 ## Working rules
 
