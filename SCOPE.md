@@ -17,7 +17,7 @@ transcribing it politely.
 | Hard input | Real disordered speech — long pauses, partial words, self-corrections, code-switching |
 | Final output | A scored session persisted against the patient, visible to their clinician |
 | **Sarvam parameter (scored)** | **Voice Experience** — one only; extra APIs add zero points |
-| Exact Sarvam surfaces | Saaras v3 (`mode=verbatim`), Bulbul v3, Sarvam LLM as judge |
+| Exact Sarvam surfaces | Saaras v3 (`mode=verbatim` + `transcribe`), Bulbul v3, `sarvam-105b` chat as judge (Sarvam-M is deprecated) |
 | Language subset | Kannada + English. Hindi only if time allows |
 | Creativity thesis | Standard ASR *repairs* disordered speech and destroys the clinical signal. Verbatim mode preserves it. We show both transcripts side by side |
 | Delight thesis | The app waits. Default endpointing cuts off at ~700ms; a patient in word-retrieval pauses 3–5s. Never interrupting is the whole feeling |
@@ -76,12 +76,17 @@ attempt persisted to SQLite.
 - **If behind:** one difficulty level, no levels UI.
 
 ### [ ] M3 · 13:30–14:45 · The judge and the comparison *(the scored axis)*
-Run the same audio through `mode=verbatim` and `mode=transcribe`. Show both
-transcripts. Sarvam LLM scores the attempt against the target with a reason.
-- **Accept:** on deliberately disfluent speech, the two transcripts visibly differ
-  and the judge explains its score.
-- **If behind:** drop the LLM; show the two transcripts alone. The comparison *is*
-  the creativity proof — protect it over everything else in this milestone.
+See `JUDGE.md` for the verified API recipe, the traps, and the architecture.
+Run the same audio through `mode=verbatim` and `mode=transcribe` **in parallel**
+and show both transcripts immediately. The LLM judge runs **off the blocking path**:
+it classifies the error clinically (phonemic vs semantic paraphasia, effortful
+correct, no attempt) and picks the next cue from the cueing hierarchy.
+- **Accept:** on a deliberately disfluent attempt the two transcripts visibly
+  differ, the judge names the error type, and a semantic error draws a different
+  cue than a phonemic one.
+- **If behind:** drop the cue hierarchy, keep error typing. If still behind, drop
+  the LLM entirely and show the two transcripts with a rule-based verdict — the
+  comparison *is* the creativity proof, protect it over everything else here.
 
 ### [ ] M4 · 14:45–15:30 · Patient and clinician continuity
 Patient identity, session history, and a clinician view listing their patients with

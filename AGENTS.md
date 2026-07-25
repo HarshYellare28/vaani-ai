@@ -11,7 +11,8 @@ Read it before proposing or making any change.
 2. Read the tail of `DECISIONS.md` — what was already decided today and why.
 3. Run `git log --oneline -15` — what already works.
 4. Identify the **active milestone**: the first unticked `### [ ] Mn` in `SCOPE.md`.
-5. Read `UI.md` before touching anything user-facing.
+5. Read `UI.md` before touching anything user-facing, and `JUDGE.md` before
+   touching ASR, the judge, or scoring.
 6. Only then propose the next change.
 
 If you are joining mid-build with no memory of earlier turns, steps 1–3 restore

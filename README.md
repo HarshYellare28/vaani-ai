@@ -27,6 +27,7 @@ Use `localhost`, not the LAN IP: `getUserMedia` requires a secure context, and
 | `docs/RUBRIC.md` | The organiser's actual L1–L5 ladders. GrowthX IP — keep private. |
 | `docs/FIELD_NOTES.md` | Sarvam API gotchas learned the hard way. |
 | `UI.md` | Design intent for anything user-facing. |
+| `JUDGE.md` | The judge layer: verified API recipe, traps, architecture. |
 | `app/main.py` | Generic scaffold: health, config, static mount. |
 
 ## Driving the build
