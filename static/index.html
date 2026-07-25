@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Buildathon</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0; min-height: 100dvh; display: grid; place-items: center;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { text-align: center; padding: 2rem; }
+    code { font-size: .95rem; opacity: .75; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Scaffold is up</h1>
+    <p><code id="status">checking…</code></p>
+  </main>
+
+  <script>
+    // Smoke test that the API and the static mount are both wired.
+    (async () => {
+      const el = document.getElementById("status");
+      try {
+        const [h, c] = await Promise.all([
+          fetch("/health").then((r) => r.json()),
+          fetch("/config").then((r) => r.json()),
+        ]);
+        el.textContent = `health: ${h.status} · sarvam key: ${c.sarvam_key_present ? "loaded" : "MISSING"}`;
+      } catch (e) {
+        el.textContent = `api unreachable: ${e.message}`;
+      }
+    })();
+  </script>
+</body>
+</html>

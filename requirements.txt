@@ -1,0 +1,11 @@
+# Scaffold only — add what the build actually needs, when it needs it.
+
+fastapi>=0.115.0
+uvicorn>=0.30.0
+python-multipart>=0.0.9      # multipart/form-data, e.g. audio uploads
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Without this, `uvicorn --reload` silently falls back to a watcher that only
+# looks at *.py, so edits to JSON data files appear to do nothing.
+watchfiles>=1.0.0
