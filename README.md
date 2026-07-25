@@ -24,6 +24,7 @@ Use `localhost`, not the LAN IP: `getUserMedia` requires a secure context, and
 | `AGENTS.md` | Entry point for **any** assistant. Read first. |
 | `SCOPE.md` | Product decisions, rubric targets, milestones, parking lot. |
 | `DECISIONS.md` | Running log. Append as you go. |
+| `docs/RUBRIC.md` | The organiser's actual L1–L5 ladders. GrowthX IP — keep private. |
 | `docs/FIELD_NOTES.md` | Sarvam API gotchas learned the hard way. |
 | `UI.md` | Design intent for anything user-facing. |
 | `app/main.py` | Generic scaffold: health, config, static mount. |

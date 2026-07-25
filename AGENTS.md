@@ -73,9 +73,26 @@ anything that breaks, is slow, or needs explaining. Change nothing unless asked.
 At each milestone boundary, answer these four in one short paragraph:
 
 1. Does the golden path still work end to end?
-2. What rubric evidence improved?
+2. What rubric evidence improved? Name the parameter and the level, checked
+   against `docs/RUBRIC.md` — not a guess about what sounds impressive.
 3. What is now the largest demo risk?
 4. What should be cut?
+
+## Scoring
+
+`docs/RUBRIC.md` holds the organiser's actual L1–L5 ladders. Read the full level
+description before claiming a level; the headlines are misleading on their own.
+
+Three rules that change what is worth building:
+
+- **Judges score one Sarvam capability**, the one most central to the job. This
+  project has locked **Voice Experience**. Additional Sarvam APIs earn zero
+  points — depth beats breadth, always.
+- **The same proof cannot raise two parameters.** Assign each demo moment to the
+  behaviour it actually demonstrates. Conversational flow within one exchange is
+  Voice Experience; persisted continuity across sessions is Memory and Context.
+- **Levels are scored independently per parameter.** There is no overall project
+  level, so a deliberate L2 on one axis is fine if another reaches L4.
 
 ## Budget discipline
 

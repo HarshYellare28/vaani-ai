@@ -35,6 +35,9 @@ account self-signup. No payments.
 Judges score five product parameters plus **one** Sarvam parameter, each L1–L5
 independently. The same proof cannot raise two parameters.
 
+The full ladders are in `docs/RUBRIC.md` — read the level description there before
+claiming a level. This table is only the target and the intended proof.
+
 | Parameter | Target | The proof that earns it |
 |---|---|---|
 | Voice Experience | L4 | Handles code-switched, disfluent Kannada/English without breaking the transcript; tolerates long silence; never talks over the patient |
