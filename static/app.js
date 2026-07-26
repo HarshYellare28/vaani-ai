@@ -493,9 +493,15 @@ function renderResult(d) {
   $("result-badge").innerHTML = `${icon(BADGE_ICON[label])}<span></span>`;
   $("result-badge").querySelector("span").textContent = badgeText(label);
 
+  // Show whichever transcript actually scored the attempt — static mode
+  // scores on transcribe, dynamic mode scores on verbatim (see drill.py).
+  // Showing the other one is worse than showing nothing: a static/dynamic
+  // ASR disagreement (real and observed — e.g. transcribe hearing "Nice" for
+  // verbatim's correct "Knife") makes a correct verdict look like nonsense.
   const heard = $("heard-val");
-  if (d.transcript && d.transcript.trim()) {
-    heard.textContent = d.transcript;
+  const heardText = state.mode === "dynamic" ? d.transcript_verbatim : d.transcript;
+  if (heardText && heardText.trim()) {
+    heard.textContent = heardText;
     heard.className = "val";
   } else {
     heard.textContent = t("nothing");

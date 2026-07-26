@@ -207,4 +207,18 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   confirmed `patient_recent_attempts` returns both attempts from the closed
   session.
 
+- `16:0x` — fixed a patient-facing display bug caught live: target "knife",
+  screen showed "HEARD: Nice" next to a "Correct, 100%" badge — looked
+  insane. Root cause: `renderResult()`'s "heard" field always showed
+  `d.transcript` (transcribe), but dynamic mode scores on
+  `transcript_verbatim` — the DB record showed transcribe genuinely heard
+  "Nice" while verbatim correctly caught "Knife" (matching the earlier
+  read→Hrid ASR-quirk pattern). The verdict was right; the display showed
+  the transcript that *didn't* drive it. Fixed: `renderResult()` now shows
+  `transcript_verbatim` in dynamic mode, `transcript` in static (unchanged,
+  since that's what static actually scores on). Verified by replaying the
+  exact reported case through `renderResult()` directly (transcribe="Nice",
+  verbatim="Knife") — now displays "Knife" — and confirmed static mode is
+  untouched.
+
 <!-- append below -->
