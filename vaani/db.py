@@ -572,20 +572,25 @@ class Database:
             w["display"] = _display(w)
         return candidates
 
-    def session_recent_attempts(self, session_id: int, limit: int = 5) -> list[dict]:
-        """Last few attempts in *this* session, with word metadata — lets the
-        dynamic judge see a trend (repeated word_type/category misses,
-        lengthening durations) rather than judging each attempt in isolation."""
+    def patient_recent_attempts(self, user_id: int, limit: int = 5) -> list[dict]:
+        """Last few attempts across ALL of this patient's sessions, with word
+        metadata — lets the dynamic judge see a trend (repeated word_type/
+        category misses, lengthening durations) rather than judging each
+        attempt in isolation. Spans sessions on purpose, not just the one in
+        progress: persisted in sqlite, so a trend from yesterday still
+        informs today's first word, surviving an app restart same as
+        everything else here."""
         with self._conn() as conn:
             rows = conn.execute(
                 """SELECT a.target_word, a.result_label, a.audio_duration_sec,
                           w.word_type, w.category, w.level
                    FROM attempts a
+                   JOIN sessions s ON a.session_id = s.id
                    LEFT JOIN words w ON a.word_id = w.id
-                   WHERE a.session_id = ?
+                   WHERE s.user_id = ?
                    ORDER BY a.created_at DESC
                    LIMIT ?""",
-                (session_id, limit),
+                (user_id, limit),
             ).fetchall()
         return [dict(r) for r in rows]
 

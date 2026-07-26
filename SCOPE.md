@@ -120,11 +120,13 @@ per-patient progress.
   proof; the dashboard is decoration.
 - **Status:** clinician view built and gated behind its own passcode
   (`VAANI_SLP_PASS`, independent of the patient's), patient roster seeded,
-  full history persists and displays. **Known gap, not yet built:** dynamic
-  mode's judge only sees the last 5 attempts of the *current* session — prior
-  *sessions* don't yet inform the next one, so "prior attempts inform the
-  next session" (the Memory rubric's L4 wording) is proven within a session,
-  not yet across sessions.
+  full history persists and displays. Dynamic mode's judge now sees the last
+  5 attempts across ALL of a patient's sessions (`db.patient_recent_attempts`),
+  not just the one in progress — a trend from a previous session (or before
+  an app restart, since it's sqlite) informs the next word, closing the
+  Memory rubric's "prior attempts inform the next session" L4 wording
+  properly, not just within a session. Verified: attempts recorded in a
+  closed session are visible to the judge in a freshly-created one.
 
 ### [ ] M5 · 15:30–16:30 · Demo hardening — **build nothing new**
 Reset state. Run the golden path three times. Record the fallback video. Verify the

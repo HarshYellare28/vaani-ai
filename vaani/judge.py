@@ -176,9 +176,10 @@ class SarvamJudge:
         """Classify this attempt and pick the next word, in one call.
 
         `candidates` and `session_history` are the dicts db.candidate_words()
-        / db.session_recent_attempts() return. Falls back to a rule-based
-        result (never raises, never blocks) if the API call fails, times out,
-        or comes back malformed after one retry.
+        / db.patient_recent_attempts() return (the latter spans all of the
+        patient's sessions, not just the one in progress). Falls back to a
+        rule-based result (never raises, never blocks) if the API call fails,
+        times out, or comes back malformed after one retry.
         """
         if not candidates:
             return self._fallback(target_word, transcript_verbatim, None, "no candidates left")

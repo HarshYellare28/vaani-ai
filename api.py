@@ -359,7 +359,10 @@ async def evaluate(
         if mode == "dynamic":
             user_id = session["user_id"]
             candidates = db.candidate_words(language, user_id, exclude_word_id=word_id, limit=8)
-            history = db.session_recent_attempts(session_id, limit=5)
+            # Across all of this patient's sessions, not just the one in
+            # progress — sqlite already persists this across restarts, the
+            # gap was only that the judge was scoped to session_id.
+            history = db.patient_recent_attempts(user_id, limit=5)
             result = drill.evaluate_attempt_dynamic(
                 word, tmp_path, language=language,
                 candidates=candidates, session_history=history,

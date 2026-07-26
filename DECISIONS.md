@@ -172,8 +172,6 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   and reran the full regression suite (now 7 cases including this one and
   tooth/teeth) — all pass.
 
-<!-- append below -->
-
 - `15:3x` — found and fixed a demo-killing judge bug during an outside-in audit.
   Symptom (reported as a TTS problem): "it says I didn't hear you and suddenly
   says <word>". Real cause: five consecutive live attempts (ids 38-42) where
@@ -194,3 +192,19 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   Worth stating plainly: this was the worst possible failure mode for this
   product — the struggling patient is the target user, and the app was
   refusing to credit a correct answer *because* they had been struggling.
+
+- `15:5x` — closed the cross-session memory gap flagged as a known cut: the
+  dynamic judge's history was scoped to `session_id`, so a patient closing
+  the app and coming back started the judge's trend-tracking from zero.
+  Added `db.patient_recent_attempts(user_id, limit)` — same shape as the
+  method it replaces, but joins through `sessions` on `user_id` instead of
+  filtering by the one session in progress. Removed the now-unused
+  `session_recent_attempts` (only caller was `/evaluate`'s dynamic branch,
+  now pointed at the new method). No new persistence needed — sqlite already
+  survives restarts, the gap was purely that the query never looked past the
+  current session. Verified directly: created a session, recorded 2
+  attempts, ended it, created a brand-new session for the same patient, and
+  confirmed `patient_recent_attempts` returns both attempts from the closed
+  session.
+
+<!-- append below -->
