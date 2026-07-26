@@ -61,8 +61,6 @@
           <svg class="ico" aria-hidden="true"><use href="#i-more"></use></svg>
         </button>
         <div id="menu" class="menu" role="menu" hidden>
-          <button id="change-lang-btn"  class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-globe"></use></svg><span data-i18n="change_language"></span></button>
-          <button id="change-level-btn" class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-levels"></use></svg><span data-i18n="change_level"></span></button>
           <button id="restart-btn"      class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg><span data-i18n="restart"></span></button>
           <div class="menu-sep"></div>
           <button id="end-btn"          class="menu-item menu-item-danger" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-power"></use></svg><span data-i18n="end"></span></button>
@@ -73,39 +71,30 @@
 
   <main class="stage">
 
-    <!-- ── Screen 0: patient picker ── -->
+    <!-- ── Screen 0: patient picker (SLP selects an already-enrolled patient) ── -->
     <section id="screen-user" class="screen" hidden>
       <div class="card">
         <h1 class="headline" data-i18n="who_practicing">Who is practicing today?</h1>
         <p class="subhead" data-i18n="who_practicing_sub"></p>
-        <div id="user-grid" class="user-grid">
-          <div class="center"><span class="spinner"></span></div>
-        </div>
+        <div id="user-loading" class="center"><span class="spinner"></span></div>
+        <select id="user-select" class="user-select" hidden></select>
         <div class="center" style="margin-top:24px">
+          <button id="user-continue-btn" class="btn btn-primary btn-lg" data-i18n="continue" hidden></button>
+        </div>
+        <div class="center" style="margin-top:16px">
           <button id="add-user-btn" class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="add_patient"></span></button>
         </div>
       </div>
     </section>
 
-    <!-- ── Screen 1: language picker ── -->
-    <section id="screen-language" class="screen" hidden>
-      <div class="card">
-        <h1 class="headline" data-i18n="choose_language"></h1>
-        <p class="subhead" data-i18n="choose_language_sub"></p>
-        <div id="lang-grid" class="pick-grid">
-          <div class="center" style="grid-column:1/-1"><span class="spinner"></span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Screen 2: level picker ── -->
-    <section id="screen-level" class="screen" hidden>
-      <div class="card">
-        <h1 class="headline" data-i18n="choose_level"></h1>
-        <p class="subhead" data-i18n="choose_level_sub"></p>
-        <div id="level-grid" class="pick-grid">
-          <div class="center" style="grid-column:1/-1"><span class="spinner"></span></div>
-        </div>
+    <!-- ── Screen 1: no assignment yet — patient never picks language/level/words
+         themselves; the SLP sets it from the clinician view (/slp.html). ── -->
+    <section id="screen-unassigned" class="screen" hidden>
+      <div class="card center">
+        <svg class="summary-mark" aria-hidden="true"><use href="#i-user"></use></svg>
+        <h1 class="headline" data-i18n="no_assignment"></h1>
+        <p class="subhead" data-i18n="no_assignment_sub"></p>
+        <button id="check-assignment-btn" class="btn btn-primary btn-lg" data-i18n="check_again"></button>
       </div>
     </section>
 
@@ -185,8 +174,6 @@
         <div id="summary-grid" class="summary-grid"></div>
         <div class="result-actions">
           <button id="again-btn"         class="btn btn-primary btn-lg" data-i18n="practice_again"></button>
-          <button id="summary-level-btn" class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-levels"></use></svg><span data-i18n="change_level"></span></button>
-          <button id="summary-lang-btn"  class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-globe"></use></svg><span data-i18n="change_language"></span></button>
         </div>
       </div>
     </section>

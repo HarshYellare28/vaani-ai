@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4f6fb" />
+  <title>Vaani · Clinician view</title>
+  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="slp.css?v=1" />
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-logo"    viewBox="0 0 24 24"><path d="M4 11v2M8 8v8M12 5v14M16 8v8M20 11v2"/></symbol>
+      <symbol id="i-user"    viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+      <symbol id="i-check"   viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+      <symbol id="i-undo"    viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></symbol>
+      <symbol id="i-mute"    viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M17 9.5l4.5 5M21.5 9.5l-4.5 5"/></symbol>
+      <symbol id="i-sun"     viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></symbol>
+      <symbol id="i-moon"    viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="appbar">
+    <div class="brand">
+      <svg class="brand-mark" aria-hidden="true"><use href="#i-logo"></use></svg>
+      <span class="brand-text">Vaani · Clinician</span>
+    </div>
+    <div class="appbar-actions">
+      <button id="theme-btn" class="icon-btn" aria-label="Toggle dark mode">
+        <svg class="ico" aria-hidden="true"><use id="theme-icon" href="#i-moon"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="slp-layout">
+    <!-- ── Patient list ── -->
+    <aside class="slp-sidebar">
+      <div class="slp-sidebar-title">Patients</div>
+      <div id="patient-list" class="slp-patient-list">
+        <div class="center"><span class="spinner"></span></div>
+      </div>
+    </aside>
+
+    <!-- ── Selected patient: assign + attempts ── -->
+    <section class="slp-detail">
+      <div id="slp-empty" class="card center">
+        <p class="subhead">Select a patient to assign practice or review attempts.</p>
+      </div>
+
+      <div id="slp-patient-view" hidden>
+        <div class="card slp-assign-card">
+          <h2 class="slp-h2" id="slp-patient-name">—</h2>
+
+          <div class="slp-mode-row" role="radiogroup" aria-label="Practice mode">
+            <label class="slp-mode-opt">
+              <input type="radio" name="assign-mode" value="static" checked>
+              <span><strong>Static</strong> — fixed word list, repeat practice</span>
+            </label>
+            <label class="slp-mode-opt">
+              <input type="radio" name="assign-mode" value="dynamic">
+              <span><strong>Dynamic</strong> — LLM judge picks each next word</span>
+            </label>
+          </div>
+
+          <div class="slp-assign-row">
+            <label>
+              Language
+              <select id="assign-language"></select>
+            </label>
+            <label id="assign-level-wrap">
+              Level<span id="assign-level-label"></span>
+              <select id="assign-level"></select>
+            </label>
+            <label id="assign-group-wrap">
+              Group
+              <select id="assign-group"></select>
+            </label>
+            <button id="assign-btn" class="btn btn-primary">Assign for today</button>
+          </div>
+          <div id="assign-current" class="slp-current"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="slp-h2">Attempts — both transcripts</h2>
+          <p class="subhead" style="margin-bottom: var(--sp-3)">
+            <strong>Heard</strong> is what scored the attempt in static mode (disfluency-repaired).
+            <strong>Verbatim</strong> keeps what the patient actually said, and is what scores dynamic-mode attempts.
+            <strong>Judge note</strong> is the LLM's reasoning for the next word (dynamic mode only).
+          </p>
+          <div id="attempts-table-wrap">
+            <div class="center"><span class="spinner"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="slp.js?v=1"></script>
+</body>
+</html>

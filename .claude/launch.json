@@ -6,6 +6,12 @@
       "runtimeExecutable": ".venv/bin/uvicorn",
       "runtimeArgs": ["api:app", "--port", "8000", "--reload", "--reload-include", "*.json"],
       "port": 8000
+    },
+    {
+      "name": "vaani-dev",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["api:app", "--port", "8010", "--reload", "--reload-include", "*.json"],
+      "port": 8010
     }
   ]
 }

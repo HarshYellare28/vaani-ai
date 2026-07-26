@@ -29,6 +29,7 @@ class Config:
     sarvam_tts_model: str
     sarvam_tts_speaker: str
     sarvam_tts_pace: float
+    sarvam_judge_model: str
 
     # Storage
     db_path: str
@@ -43,6 +44,8 @@ class Config:
             # its speaker pool differs from v2 — 'anushka' is v2-only.
             sarvam_tts_model=os.getenv("SARVAM_TTS_MODEL", "bulbul:v3"),
             sarvam_tts_speaker=os.getenv("SARVAM_TTS_SPEAKER", "priya"),
-            sarvam_tts_pace=float(os.getenv("SARVAM_TTS_PACE", "0.8")),
+            sarvam_tts_pace=float(os.getenv("SARVAM_TTS_PACE", "0.95")),
+            # sarvam-105b, not the deprecated Sarvam-M — see JUDGE.md.
+            sarvam_judge_model=os.getenv("SARVAM_JUDGE_MODEL", "sarvam-105b"),
             db_path=os.getenv("VAANI_DB_PATH", "vaani.db"),
         )

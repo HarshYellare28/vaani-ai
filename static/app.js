@@ -45,15 +45,6 @@ function badgeText(label) {
   return (I18N[locale]?.badges?.[label]) ?? (I18N[FALLBACK]?.badges?.[label]) ?? label;
 }
 
-// Language card display — look up the entry directly (no English fallback, so
-// an as-yet-untranslated language still shows its own code).
-function langCard(code) {
-  const base = (code || "").split("-")[0].toLowerCase();
-  const loc = I18N[base];
-  return loc ? { flag: loc.meta.flag, native: loc.meta.native }
-             : { flag: "•", native: code };
-}
-
 // Bilingual category strings ("People / ಜನರು") → the segment for this locale.
 // The native half is matched across the whole Indic range (Devanagari through
 // Malayalam, mirroring textutils._is_indic) rather than Devanagari alone, so
@@ -95,6 +86,7 @@ function toggleTheme() {
 // ── state ────────────────────────────────────────────────────────────
 const state = {
   userId: null, userName: null,
+  mode: "static",  // "static" | "dynamic" — from the SLP's assignment
   language: null, level: null, group: null,
   groupScores: [], words: [], index: 0,
   sessionId: null, recorder: null, recording: false,
@@ -183,16 +175,14 @@ function waveStop() {
 
 // ── screen + menu management ─────────────────────────────────────────
 function showScreen(name) {
-  for (const s of ["user", "language", "level", "drill", "summary"])
+  for (const s of ["user", "unassigned", "drill", "summary"])
     $(`screen-${s}`).hidden = s !== name;
-  const onLevel = name === "level";
   const onDrill = name === "drill";
-  $("patient-chip").hidden   = !(onLevel || onDrill);
+  $("patient-chip").hidden   = !onDrill;
   $("level-chip-bar").hidden = !onDrill;
-  $("menu-btn").hidden       = !(onLevel || onDrill);
-  // menu items
-  $("change-lang-btn").hidden  = !(onLevel || onDrill);
-  $("change-level-btn").hidden = !onDrill;
+  $("menu-btn").hidden       = !onDrill;
+  // menu items — no change-language/change-level: the SLP owns the
+  // assignment, the patient never picks.
   $("restart-btn").hidden      = !onDrill;
   $("end-btn").hidden          = !onDrill;
   closeMenu();
@@ -217,23 +207,37 @@ window.addEventListener("beforeunload", () => {
 });
 
 // ── user screen ─────────────────────────────────────────────────────
+// The SLP picks an already-enrolled patient from a dropdown — no typing, no
+// self-signup. Patients are seeded server-side (vaani/db.py); "Add patient"
+// is a fallback for enrolling someone new mid-session, not the primary flow.
 async function renderUsers() {
   showScreen("user");
-  const users = await (await fetch("/users")).json();
+  let users = [];
+  try {
+    users = await (await fetch("/users")).json();
+  } catch (e) {
+    console.error("[Vaani] failed to load patients", e);
+  }
+  populateUserSelect(users);
+}
+
+function populateUserSelect(users) {
+  $("user-loading").hidden = true;
+  const select = $("user-select");
+  select.innerHTML = users.map((u) =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join("");
+  select.hidden = users.length === 0;
+  $("user-continue-btn").hidden = users.length === 0;
 
   const storedId = parseInt(localStorage.getItem("vaani_user_id") || "0");
-  const stored = users.find((u) => u.id === storedId);
-  if (stored) { await chooseUser(stored.id, stored.name); return; }
-  if (users.length === 1) { await chooseUser(users[0].id, users[0].name); return; }
+  if (users.some((u) => u.id === storedId)) select.value = storedId;
+}
 
-  $("user-grid").innerHTML = users.map((u) =>
-    `<button class="user-card" data-id="${u.id}" data-name="${u.name}">
-       <div class="user-avatar">${icon("user", "avatar-ico")}</div>
-       <div class="user-name">${u.name}</div>
-     </button>`
-  ).join("");
-  for (const el of document.querySelectorAll(".user-card"))
-    el.onclick = () => chooseUser(Number(el.dataset.id), el.dataset.name);
+function continueWithSelectedUser() {
+  const opt = $("user-select").selectedOptions[0];
+  if (!opt) return;
+  chooseUser(Number(opt.value), opt.textContent);
 }
 
 async function chooseUser(id, name) {
@@ -242,7 +246,66 @@ async function chooseUser(id, name) {
   localStorage.setItem("vaani_user_id", id);
   $("patient-chip").innerHTML = `${icon("user")}<span></span>`;
   $("patient-chip").querySelector("span").textContent = name;
-  await renderLanguages();
+  await loadAssignmentAndStart();
+}
+
+// ── assignment-driven start ────────────────────────────────────────
+// No language/level picker for the patient — the SLP sets what they practice
+// today (POST /assign from /slp.html). This just plays back whatever's there.
+async function loadAssignmentAndStart() {
+  let a = null;
+  try {
+    a = await (await fetch(`/assignment?user_id=${state.userId}`)).json();
+  } catch (e) {
+    console.error("[Vaani] failed to load assignment", e);
+  }
+  if (!a || !a.language) {
+    showScreen("unassigned");
+    return;
+  }
+  state.mode = a.mode || "static";
+  state.language = a.language;
+  state.level = a.level;
+  applyLocale(toLocale(a.language));
+  const info = levelInfo(a.level);
+  $("level-chip-bar").innerHTML = `${icon(LEVEL_ICON[a.level] || "levels")}<span></span>`;
+  $("level-chip-bar").querySelector("span").textContent =
+    state.mode === "dynamic" ? "Dynamic" : info.name;
+
+  if (state.mode === "dynamic") {
+    await startDynamicSession(a);
+  } else {
+    await refreshGroupScores();
+    await chooseGroup(a.group_num);
+  }
+}
+
+// Dynamic mode has no fixed word list — the server picks a first word at
+// session start, and each /evaluate response picks the next one (judged by
+// the LLM against the verbatim transcript; see vaani/judge.py). The patient
+// app just appends whatever it's given and walks forward.
+async function startDynamicSession(a) {
+  await endActiveSession();
+  const form = new FormData();
+  form.append("language", state.language);
+  form.append("level", state.level);
+  form.append("user_id", state.userId);
+  form.append("group_num", a.group_num);
+  const r = await (await fetch("/session/start", { method: "POST", body: form })).json();
+  state.sessionId = r.session_id;
+
+  if (!r.first_word) {
+    // Corpus exhausted for this language/patient — rare (English has 100
+    // words, Hindi 900), but don't leave the patient stuck on a spinner.
+    showScreen("unassigned");
+    return;
+  }
+  state.words = [r.first_word];
+  state.index = 0;
+  showScreen("drill");
+  const sidebar = document.querySelector(".group-sidebar");
+  if (sidebar) sidebar.hidden = true;
+  renderWord();
 }
 
 async function addUser() {
@@ -252,62 +315,6 @@ async function addUser() {
   form.append("name", name.trim());
   const res = await (await fetch("/users", { method: "POST", body: form })).json();
   await chooseUser(res.user_id, res.name);
-}
-
-// ── language screen ─────────────────────────────────────────────────
-async function renderLanguages() {
-  showScreen("language");
-  const langs = await (await fetch("/languages")).json();
-  $("lang-grid").innerHTML = langs.map((l) => {
-    const m = langCard(l.language);
-    return `<button class="pick-card" data-lang="${l.language}">
-        <div class="pick-flag">${m.flag}</div>
-        <div class="pick-name">${m.native}</div>
-        <div class="pick-meta">${l.word_count} ${t("words")}</div>
-      </button>`;
-  }).join("");
-  for (const el of document.querySelectorAll(".pick-card"))
-    el.onclick = () => chooseLanguage(el.dataset.lang);
-}
-
-async function chooseLanguage(lang) {
-  state.language = lang;
-  state.sessionId = null;
-  applyLocale(toLocale(lang));   // flip the entire UI to the practice language
-  await renderLevels();
-}
-
-// ── level screen ────────────────────────────────────────────────────
-async function renderLevels() {
-  showScreen("level");
-  $("level-grid").innerHTML =
-    '<div class="center" style="grid-column:1/-1"><span class="spinner"></span></div>';
-  const levels = await (await fetch(
-    `/levels?language=${encodeURIComponent(state.language)}`)).json();
-  $("level-grid").innerHTML = levels.map((l) => {
-    const info = levelInfo(l.level);
-    return `<button class="pick-card" data-level="${l.level}">
-        <div class="pick-flag">${icon(LEVEL_ICON[l.level] || "levels", "pick-ico")}</div>
-        <div class="pick-name">${info.name}</div>
-        <div class="pick-meta">${l.word_count} ${t("words")}</div>
-        <div class="pick-desc">${info.desc}</div>
-      </button>`;
-  }).join("");
-  for (const el of document.querySelectorAll("#level-grid .pick-card"))
-    el.onclick = () => chooseLevel(Number(el.dataset.level));
-}
-
-async function chooseLevel(level) {
-  state.level = level;
-  state.sessionId = null;
-  const info = levelInfo(level);
-  $("level-chip-bar").innerHTML = `${icon(LEVEL_ICON[level] || "levels")}<span></span>`;
-  $("level-chip-bar").querySelector("span").textContent = info.name;
-
-  await refreshGroupScores();
-  const first = state.groupScores.find((g) => g.words_correct < g.word_count)
-             || state.groupScores[0];
-  if (first) await chooseGroup(first.group_num);
 }
 
 // ── group sidebar ───────────────────────────────────────────────────
@@ -344,6 +351,7 @@ function renderGroupSidebar() {
 
 async function chooseGroup(groupNum) {
   await endActiveSession();
+  state.mode = "static";
   state.group = groupNum;
   state.index = 0;
 
@@ -365,9 +373,17 @@ function currentWord() { return state.words[state.index]; }
 
 function renderWord() {
   const w = currentWord();
-  $("progress").textContent = `${t("word")} ${state.index + 1} / ${state.words.length}`;
-  $("level-chip").textContent = `${t("level")} ${w.level} · ${t("group")} ${state.group}`;
-  $("progress-fill").style.width = `${(state.index / state.words.length) * 100}%`;
+  if (state.mode === "dynamic") {
+    // No fixed total to count against — the judge extends the list one word
+    // at a time, so "N / total" would just show a number trailing itself.
+    $("progress").textContent = `${t("word")} ${state.index + 1}`;
+    $("level-chip").textContent = `${t("level")} ${w.level}`;
+    $("progress-fill").style.width = "0%";
+  } else {
+    $("progress").textContent = `${t("word")} ${state.index + 1} / ${state.words.length}`;
+    $("level-chip").textContent = `${t("level")} ${w.level} · ${t("group")} ${state.group}`;
+    $("progress-fill").style.width = `${(state.index / state.words.length) * 100}%`;
+  }
   const wd = $("word-display");
   wd.textContent = w.text;
   wd.lang = (w.language || "").split("-")[0];
@@ -499,10 +515,18 @@ function renderResult(d) {
   $("detect-chip").hidden = !d.language_detected;
 
   $("feedback-text").textContent = d.decision.feedback_text;
-  $("next-btn").hidden = !d.correct;
+
+  if (state.mode === "dynamic") {
+    // The judge already picked what's next regardless of correctness — that
+    // IS the adaptive behavior, so don't gate "Next" on getting it right.
+    if (d.next_word) state.words.push(d.next_word);
+    $("next-btn").hidden = !d.next_word;  // no candidates left → let skip/end handle it
+  } else {
+    $("next-btn").hidden = !d.correct;
+    if (d.correct) refreshGroupScores();
+  }
 
   if (d.feedback_audio_wav_b64) playBase64Wav(d.feedback_audio_wav_b64);
-  if (d.correct) refreshGroupScores();
 }
 
 // The judge's verdict is the point of the product, so let it land as motion
@@ -565,9 +589,6 @@ async function restart() {
   renderWord();
 }
 
-async function changeLevel()    { await endActiveSession(); await renderLevels(); }
-async function changeLanguage() { await endActiveSession(); await renderLanguages(); }
-
 async function endSession() {
   let s = { attempts: 0, correct: 0, avg_similarity: null, avg_duration: null };
   if (state.sessionId) {
@@ -596,12 +617,12 @@ function wireButtons() {
   $("next-btn").onclick     = nextWord;
   $("restart-btn").onclick  = () => { closeMenu(); restart(); };
   $("end-btn").onclick      = () => { closeMenu(); endSession(); };
-  $("change-lang-btn").onclick  = () => { closeMenu(); changeLanguage(); };
-  $("change-level-btn").onclick = () => { closeMenu(); changeLevel(); };
   $("add-user-btn").onclick     = addUser;
-  $("again-btn").onclick         = () => chooseLevel(state.level);
-  $("summary-level-btn").onclick = changeLevel;
-  $("summary-lang-btn").onclick  = changeLanguage;
+  $("user-continue-btn").onclick = continueWithSelectedUser;
+  $("check-assignment-btn").onclick = loadAssignmentAndStart;
+  // Re-checks the assignment rather than just replaying the same group — the
+  // SLP may have assigned something new between sessions.
+  $("again-btn").onclick         = async () => { await endActiveSession(); await loadAssignmentAndStart(); };
 
   $("theme-btn").onclick = toggleTheme;
   $("menu-btn").onclick = (e) => { e.stopPropagation(); toggleMenu(); };

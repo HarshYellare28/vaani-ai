@@ -3,16 +3,31 @@
 Run:  uvicorn api:app --reload --host 0.0.0.0 --port 8000
 Then open http://localhost:8000  (localhost is a secure context, so the mic works)
 
-Flow: pick user → language → level → group → per word: prompt, record, evaluate.
+Patient flow: pick user → play the assigned drill (no picker; see /assignment).
+Clinician flow (/slp.html): pick a patient → assign language/level/group,
+static or dynamic → review attempts with both transcripts + judge notes.
+Gated separately — see VAANI_SLP_PASS.
+
+Two judging modes, set per-assignment (see JUDGE.md, vaani/judge.py):
+  static  — fixed word list, scored locally against the transcribe
+            transcript. Repeat-practice, no LLM, instant.
+  dynamic — no fixed list; scored by sarvam-105b against the VERBATIM
+            transcript, which also picks each next word from the patient's
+            error/duration trend (vaani/judge.py's research-mapped policy).
+            On the blocking path — the score itself depends on the judge.
 
 API:
   GET  /users                                -> patient list
   POST /users                                -> create patient {name}
-  GET  /languages                            -> available languages + word counts
-  GET  /levels?language=hi-IN                -> levels for a language + word counts
+  GET  /languages                            -> available languages + word counts   [clinician]
+  GET  /levels?language=hi-IN                -> levels for a language + word counts  [clinician]
   GET  /groups?language=hi-IN&level=1&user_id=1  -> groups with per-user scores
   GET  /words?language=hi-IN&level=1&group=1 -> drill words (optionally filtered)
-  POST /session/start                        -> {session_id}  (form: language, level, user_id, group_num)
+  POST /assign                               -> set a patient's assignment {mode: static|dynamic} [clinician]
+  GET  /assignment?user_id=1                 -> a patient's current assignment (or {})
+  GET  /patients/{user_id}/attempts          -> a patient's attempts, both transcripts + judge notes [clinician]
+  POST /session/start                        -> {session_id, mode, first_word}  (form: language, level, user_id, group_num)
+                                                 first_word is set only when the assignment's mode is dynamic
   POST /session/{id}/end                     -> session summary
   POST /prompt                               -> WAV audio of a target word
   POST /evaluate                             -> assessment + decision + feedback (persisted)
@@ -56,7 +71,7 @@ _BASIC_PASS = os.getenv("VAANI_BASIC_PASS", "")
 _COOKIE_NAME = "vaani_auth"
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
 # Paths reachable without a valid cookie.
-_OPEN_PATHS = {"/health", "/login"}
+_OPEN_PATHS = {"/health", "/login", "/slp/login"}
 
 
 def _expected_token() -> str:
@@ -69,6 +84,37 @@ def _is_authed(request: Request) -> bool:
         return True
     token = request.cookies.get(_COOKIE_NAME, "")
     return secrets.compare_digest(token, _expected_token())
+
+
+# ── Second, independent gate for the clinician surface (set VAANI_SLP_PASS) ──
+# The patient passcode above (if set) just gets you into the app at all — it
+# doesn't distinguish patient from SLP, so a patient who has it could still
+# browse to /slp.html. This is a separate cookie/passcode layered on top of
+# specifically the clinician paths, so a patient device never needs to know
+# it and a leaked patient passcode can't expose other patients' attempts.
+_SLP_PASS = os.getenv("VAANI_SLP_PASS", "")
+_SLP_COOKIE_NAME = "vaani_slp_auth"
+
+
+def _slp_expected_token() -> str:
+    return hmac.new(_SLP_PASS.encode(), b"vaani-slp-authenticated", hashlib.sha256).hexdigest()
+
+
+def _is_slp_authed(request: Request) -> bool:
+    if not _SLP_PASS:
+        return True
+    token = request.cookies.get(_SLP_COOKIE_NAME, "")
+    return secrets.compare_digest(token, _slp_expected_token())
+
+
+def _is_slp_path(path: str) -> bool:
+    """Clinician-only surface: the dashboard page/assets, and the API
+    endpoints that expose or change data across patients. Everything else
+    (/, /users, /groups, /assignment, /prompt, /evaluate, ...) stays on the
+    ordinary patient passcode — the patient app itself depends on those."""
+    if path in ("/slp.html", "/slp.css", "/slp.js", "/languages", "/levels", "/assign"):
+        return True
+    return path.startswith("/patients/")
 
 
 _LOGIN_PAGE = """<!doctype html>
@@ -95,10 +141,10 @@ _LOGIN_PAGE = """<!doctype html>
   .err {{ color:#dc2626; font-size:.88rem; margin-top:.8rem; min-height:1.1em; }}
 </style></head>
 <body>
-  <form class="card" method="post" action="/login">
+  <form class="card" method="post" action="{action}">
     <div class="logo">🗣️</div>
-    <h1>Vaani</h1>
-    <p class="sub">Enter passcode</p>
+    <h1>{title}</h1>
+    <p class="sub">{subtitle}</p>
     <input name="passcode" type="password" autofocus autocomplete="current-password"
            placeholder="Passcode" required>
     <button type="submit">Enter</button>
@@ -109,7 +155,9 @@ _LOGIN_PAGE = """<!doctype html>
 
 @app.get("/login")
 def login_page():
-    return HTMLResponse(_LOGIN_PAGE.format(error=""))
+    return HTMLResponse(_LOGIN_PAGE.format(
+        action="/login", title="Vaani", subtitle="Enter passcode", error="",
+    ))
 
 
 @app.post("/login")
@@ -122,19 +170,58 @@ def login_submit(passcode: str = Form(...)):
         )
         return resp
     return HTMLResponse(
-        _LOGIN_PAGE.format(error="Wrong passcode"), status_code=401
+        _LOGIN_PAGE.format(
+            action="/login", title="Vaani", subtitle="Enter passcode",
+            error="Wrong passcode",
+        ),
+        status_code=401,
+    )
+
+
+@app.get("/slp/login")
+def slp_login_page():
+    return HTMLResponse(_LOGIN_PAGE.format(
+        action="/slp/login", title="Vaani · Clinician",
+        subtitle="Enter clinician passcode", error="",
+    ))
+
+
+@app.post("/slp/login")
+def slp_login_submit(passcode: str = Form(...)):
+    if _SLP_PASS and secrets.compare_digest(passcode.encode(), _SLP_PASS.encode()):
+        resp = RedirectResponse("/slp.html", status_code=303)
+        resp.set_cookie(
+            _SLP_COOKIE_NAME, _slp_expected_token(),
+            max_age=_COOKIE_MAX_AGE, httponly=True, secure=True, samesite="lax",
+        )
+        return resp
+    return HTMLResponse(
+        _LOGIN_PAGE.format(
+            action="/slp/login", title="Vaani · Clinician",
+            subtitle="Enter clinician passcode", error="Wrong passcode",
+        ),
+        status_code=401,
     )
 
 
 @app.middleware("http")
 async def auth_gate(request: Request, call_next):
-    if request.url.path in _OPEN_PATHS or _is_authed(request):
-        return await call_next(request)
-    # Unauthenticated. Send browser navigations to the login page; APIs get JSON.
+    path = request.url.path
     accept = request.headers.get("accept", "")
-    if request.method == "GET" and "text/html" in accept:
-        return RedirectResponse("/login", status_code=303)
-    return JSONResponse({"detail": "unauthorized"}, status_code=401)
+    is_get_html = request.method == "GET" and "text/html" in accept
+
+    if path not in _OPEN_PATHS and not _is_authed(request):
+        # Unauthenticated. Send browser navigations to the login page; APIs get JSON.
+        if is_get_html:
+            return RedirectResponse("/login", status_code=303)
+        return JSONResponse({"detail": "unauthorized"}, status_code=401)
+
+    if _is_slp_path(path) and not _is_slp_authed(request):
+        if is_get_html:
+            return RedirectResponse("/slp/login", status_code=303)
+        return JSONResponse({"detail": "unauthorized"}, status_code=401)
+
+    return await call_next(request)
 
 
 @app.get("/health")
@@ -159,6 +246,29 @@ def users_list():
 def users_create(name: str = Form(...)):
     user_id = db.create_user(name)
     return {"user_id": user_id, "name": name}
+
+
+# ── SLP: assignment + attempts (clinician view, no picker for the patient) ──
+@app.post("/assign")
+def assign(
+    user_id: int = Form(...),
+    language: str = Form(...),
+    level: int = Form(...),
+    group_num: int = Form(...),
+    mode: str = Form("static"),
+):
+    db.set_assignment(user_id, language, level, group_num, mode)
+    return {"ok": True}
+
+
+@app.get("/assignment")
+def assignment(user_id: int):
+    return db.get_assignment(user_id) or {}
+
+
+@app.get("/patients/{user_id}/attempts")
+def patient_attempts(user_id: int, limit: int = 100):
+    return db.list_attempts(user_id, limit)
 
 
 # ── data ──────────────────────────────────────────────────────────────
@@ -190,7 +300,22 @@ def session_start(
     user_id: int = Form(None),
     group_num: int = Form(None),
 ):
-    return {"session_id": db.create_session(language, level, user_id, group_num)}
+    """Mode comes from the patient's assignment, not the client — the
+    frontend never gets to pick dynamic mode for itself. Dynamic sessions
+    additionally return `first_word`, since there's no fixed word list to
+    fetch from /words; the patient app appends to its own list from there."""
+    a = db.get_assignment(user_id) if user_id else None
+    mode = a["mode"] if a else "static"
+    session_id = db.create_session(language, level, user_id, group_num, mode)
+
+    first_word = None
+    if mode == "dynamic":
+        candidates = db.candidate_words(language, user_id, exclude_word_id=None, limit=8)
+        if candidates:
+            target_level = level or 1
+            first_word = min(candidates, key=lambda w: abs((w["level"] or 1) - target_level))
+
+    return {"session_id": session_id, "mode": mode, "first_word": first_word}
 
 
 @app.post("/session/{session_id}/end")
@@ -215,12 +340,35 @@ async def evaluate(
     word_id: int | None = Form(None),
     attempt: UploadFile = File(...),
 ):
-    """Judge one recorded attempt, persist it, return assessment + feedback."""
+    """Judge one recorded attempt, persist it, return assessment + feedback.
+
+    Mode is read from the session (server-authoritative, not client-supplied):
+    static scores against the transcribe transcript with a fixed word list;
+    dynamic scores against the verbatim transcript via the LLM judge, which
+    also picks the next word — returned as `next_word` since dynamic mode has
+    no fixed list for the client to walk.
+    """
+    session = db.get_session(session_id)
+    mode = session["mode"] if session else "static"
+
     tmp_path = f"/tmp/attempt_{int(time.time() * 1000)}.wav"
+    next_word = None
     try:
         with open(tmp_path, "wb") as f:
             f.write(await attempt.read())
-        result = drill.evaluate_attempt(word, tmp_path, language=language)
+        if mode == "dynamic":
+            user_id = session["user_id"]
+            candidates = db.candidate_words(language, user_id, exclude_word_id=word_id, limit=8)
+            history = db.session_recent_attempts(session_id, limit=5)
+            result = drill.evaluate_attempt_dynamic(
+                word, tmp_path, language=language,
+                candidates=candidates, session_history=history,
+            )
+            next_word = next(
+                (c for c in candidates if c["id"] == result.assessment.judge_next_word_id), None,
+            )
+        else:
+            result = drill.evaluate_attempt(word, tmp_path, language=language)
     finally:
         try:
             os.unlink(tmp_path)
@@ -237,12 +385,16 @@ async def evaluate(
         "attempt_id": attempt_id,
         "target_word": a.target_word,
         "transcript": a.transcript,
+        "transcript_verbatim": a.transcript_verbatim,
         "result_label": a.result_label,
         "correct": a.correct,
         "similarity": round(a.similarity, 2),
         "audio_duration_sec": a.audio_duration_sec,
         "language_detected": a.language_detected,
         "language_probability": a.language_probability,
+        "judge_error_type": a.judge_error_type,
+        "judge_note": a.judge_note,
+        "next_word": next_word,  # dynamic mode only; null otherwise (or if candidates ran out)
         "decision": {
             "action": d.action.value,
             "feedback_text": d.feedback_text,
