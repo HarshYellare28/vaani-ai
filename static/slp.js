@@ -125,6 +125,12 @@ async function loadCurrentAssignment() {
     $("assign-current").textContent = "No assignment yet — patient sees a wait screen until you assign one.";
     return;
   }
+  // Sync the mode toggle to what's actually assigned — it was defaulting to
+  // whatever the HTML's `checked` attribute said, regardless of the patient.
+  const radio = document.querySelector(`input[name="assign-mode"][value="${a.mode}"]`);
+  if (radio) radio.checked = true;
+  applyModeVisibility();
+
   const when = `(set ${new Date(a.assigned_at).toLocaleString()})`;
   $("assign-current").textContent = a.mode === "dynamic"
     ? `Currently assigned: ${a.language}, dynamic mode, starting near level ${a.level} ${when}`

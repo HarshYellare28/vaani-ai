@@ -235,4 +235,13 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   result; the two real incorrect attempts made during testing correctly did
   not advance.
 
+- `16:2x` — fixed SLP mode toggle not reflecting the actual assignment:
+  selecting a patient always showed "Static" checked regardless of what was
+  really assigned, since the radio's `checked` HTML attribute never got
+  synced to the fetched assignment. `loadCurrentAssignment()` now sets the
+  matching radio and calls `applyModeVisibility()` when a patient is
+  selected. Verified both directions: a dynamic-assigned patient now shows
+  Dynamic checked + group selector hidden, a static-assigned patient shows
+  Static checked + group selector visible.
+
 <!-- append below -->
