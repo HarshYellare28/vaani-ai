@@ -83,6 +83,13 @@ never completing it.
    - no_attempt: nothing intelligible, silence, or an unrelated word.
    RULE: if heard_verbatim is empty or whitespace, the answer is ALWAYS \
 no_attempt — never guess a paraphasia type from silence.
+   RULE: error_type is decided ONLY by comparing heard_verbatim to \
+target_word for THIS attempt. session_history describes PAST attempts on \
+DIFFERENT words — it is irrelevant to this classification and must never \
+change it. A clean, clear heard_verbatim match to target_word is correct \
+even if every prior attempt in the history was no_attempt; a trend in the \
+history is never evidence about what was heard just now. session_history \
+matters ONLY for step 2 below (picking the next word), never for step 1.
 
 2. Pick the SINGLE best next word for this patient from the numbered \
 candidate list you're given — you may ONLY return an id from that list, \

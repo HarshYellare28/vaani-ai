@@ -157,4 +157,19 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   (21, 22) in vaani.db uncorrected — didn't want to mutate what's meant to be
   an append-only record without asking; the fix applies going forward.
 
+- `15:3x` — fixed a more serious judge misclassification, also caught live:
+  target "cat", transcript AND transcript_verbatim both exactly "Cat" (100%
+  string match), still classified `no_attempt` (attempt ids 40-41 in
+  vaani.db). Root cause: the prompt separated "classify this attempt" from
+  "pick next word using session_history" but never said history was
+  *irrelevant* to classification — the model was pattern-matching the
+  session's recent no_speech trend onto the current attempt and ignoring
+  what heard_verbatim actually said. Added an explicit isolation rule:
+  error_type comes ONLY from comparing heard_verbatim to target_word for
+  THIS attempt; session_history is for step 2 (next word) only, never step
+  1. Reproduced the exact failure (clean verbatim match + a history of prior
+  no_speech results), confirmed it now returns `correct` in 3 stable trials,
+  and reran the full regression suite (now 7 cases including this one and
+  tooth/teeth) — all pass.
+
 <!-- append below -->
