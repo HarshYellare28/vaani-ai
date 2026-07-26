@@ -7,4 +7,6 @@ __pycache__/
 *.sqlite3
 *.wav
 audio_out/
+# May contain transcripts — patient data.
+logs/
 .DS_Store

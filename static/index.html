@@ -3,37 +3,197 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Buildathon</title>
-  <style>
-    :root { color-scheme: light dark; }
-    body {
-      margin: 0; min-height: 100dvh; display: grid; place-items: center;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    }
-    main { text-align: center; padding: 2rem; }
-    code { font-size: .95rem; opacity: .75; }
-  </style>
+  <meta name="theme-color" content="#f4f6fb" />
+  <title>Vaani</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b53f0' stroke-width='2.5' stroke-linecap='round'><path d='M4 11v2M8 8v8M12 5v14M16 8v8M20 11v2'/></svg>" />
+  <link rel="stylesheet" href="styles.css?v=9" />
 </head>
 <body>
-  <main>
-    <h1>Scaffold is up</h1>
-    <p><code id="status">checking…</code></p>
+  <!-- ── Icon sprite ──
+       Every icon is stroke-only and inherits currentColor, so one .ico rule in
+       the stylesheet sizes and colours the whole set. Replaces the emoji the UI
+       used to use as icons, which rendered differently on every platform. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-logo"    viewBox="0 0 24 24"><path d="M4 11v2M8 8v8M12 5v14M16 8v8M20 11v2"/></symbol>
+      <symbol id="i-volume"  viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></symbol>
+      <symbol id="i-mic"     viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+      <symbol id="i-stop"    viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></symbol>
+      <symbol id="i-undo"    viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></symbol>
+      <symbol id="i-globe"   viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol>
+      <symbol id="i-levels"  viewBox="0 0 24 24"><path d="M5 19v-6M12 19V7M19 19v-9"/></symbol>
+      <symbol id="i-power"   viewBox="0 0 24 24"><path d="M12 4v7"/><path d="M7.5 7a7 7 0 1 0 9 0"/></symbol>
+      <symbol id="i-plus"    viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-check"   viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+      <symbol id="i-mute"    viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M17 9.5l4.5 5M21.5 9.5l-4.5 5"/></symbol>
+      <symbol id="i-user"    viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+      <symbol id="i-next"    viewBox="0 0 24 24"><path d="M5 12h13"/><path d="M12 6l6 6-6 6"/></symbol>
+      <symbol id="i-skip"    viewBox="0 0 24 24"><path d="M6 6.5 14 12l-8 5.5V6.5Z"/><path d="M18 6v12"/></symbol>
+      <symbol id="i-trophy"  viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5.5A2.5 2.5 0 0 0 8 8.5"/><path d="M16 6h2.5A2.5 2.5 0 0 1 16 8.5"/><path d="M12 13v4"/><path d="M8.5 20h7"/></symbol>
+      <symbol id="i-more"    viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01"/></symbol>
+      <symbol id="i-sun"     viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></symbol>
+      <symbol id="i-moon"    viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></symbol>
+      <!-- Difficulty as rising bars: 1, 2 or 3 lit. -->
+      <symbol id="i-level-1" viewBox="0 0 24 24"><path d="M6 18v-3"/></symbol>
+      <symbol id="i-level-2" viewBox="0 0 24 24"><path d="M6 18v-3M12 18v-7"/></symbol>
+      <symbol id="i-level-3" viewBox="0 0 24 24"><path d="M6 18v-3M12 18v-7M18 18v-11"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- ── App bar ── -->
+  <header class="appbar">
+    <div class="brand">
+      <svg class="brand-mark" aria-hidden="true"><use href="#i-logo"></use></svg>
+      <span class="brand-text">Vaani</span>
+    </div>
+
+    <div class="appbar-actions">
+      <span id="patient-chip" class="status-chip" hidden></span>
+      <span id="level-chip-bar" class="status-chip status-chip-soft" hidden></span>
+
+      <button id="theme-btn" class="icon-btn" aria-label="Toggle dark mode">
+        <svg class="ico" aria-hidden="true"><use id="theme-icon" href="#i-moon"></use></svg>
+      </button>
+
+      <div class="menu-wrap">
+        <button id="menu-btn" class="icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="Menu" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-more"></use></svg>
+        </button>
+        <div id="menu" class="menu" role="menu" hidden>
+          <button id="change-lang-btn"  class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-globe"></use></svg><span data-i18n="change_language"></span></button>
+          <button id="change-level-btn" class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-levels"></use></svg><span data-i18n="change_level"></span></button>
+          <button id="restart-btn"      class="menu-item" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg><span data-i18n="restart"></span></button>
+          <div class="menu-sep"></div>
+          <button id="end-btn"          class="menu-item menu-item-danger" role="menuitem"><svg class="ico" aria-hidden="true"><use href="#i-power"></use></svg><span data-i18n="end"></span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage">
+
+    <!-- ── Screen 0: patient picker ── -->
+    <section id="screen-user" class="screen" hidden>
+      <div class="card">
+        <h1 class="headline" data-i18n="who_practicing">Who is practicing today?</h1>
+        <p class="subhead" data-i18n="who_practicing_sub"></p>
+        <div id="user-grid" class="user-grid">
+          <div class="center"><span class="spinner"></span></div>
+        </div>
+        <div class="center" style="margin-top:24px">
+          <button id="add-user-btn" class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="add_patient"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Screen 1: language picker ── -->
+    <section id="screen-language" class="screen" hidden>
+      <div class="card">
+        <h1 class="headline" data-i18n="choose_language"></h1>
+        <p class="subhead" data-i18n="choose_language_sub"></p>
+        <div id="lang-grid" class="pick-grid">
+          <div class="center" style="grid-column:1/-1"><span class="spinner"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Screen 2: level picker ── -->
+    <section id="screen-level" class="screen" hidden>
+      <div class="card">
+        <h1 class="headline" data-i18n="choose_level"></h1>
+        <p class="subhead" data-i18n="choose_level_sub"></p>
+        <div id="level-grid" class="pick-grid">
+          <div class="center" style="grid-column:1/-1"><span class="spinner"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Screen 3: drill ── -->
+    <section id="screen-drill" class="screen screen-drill" hidden>
+
+      <aside class="group-sidebar">
+        <div class="sidebar-title" data-i18n="groups"></div>
+        <div id="group-list" class="group-list"></div>
+      </aside>
+
+      <div class="drill-main">
+        <div class="card word-card">
+          <div class="progress-row">
+            <span id="progress" class="progress-label">—</span>
+            <span id="level-chip" class="level-chip"></span>
+          </div>
+          <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+
+          <div class="word-stage">
+            <div id="word-display" class="word">…</div>
+            <div id="word-gloss" class="gloss"></div>
+            <div id="word-category" class="word-category"></div>
+          </div>
+
+          <div class="actions">
+            <button id="listen-btn" class="btn btn-lg btn-accent">
+              <svg class="ico" aria-hidden="true"><use href="#i-volume"></use></svg><span data-i18n="listen"></span>
+            </button>
+            <button id="record-btn" class="btn btn-lg btn-primary">
+              <svg class="ico" aria-hidden="true"><use id="record-icon" href="#i-mic"></use></svg><span class="record-label" data-i18n="speak"></span>
+            </button>
+          </div>
+
+          <!-- Live mic level, drawn from the same frames the recorder captures. -->
+          <canvas id="wave" class="wave" height="64" hidden></canvas>
+
+          <div id="status" class="status"></div>
+
+          <!-- Result -->
+          <div id="result" class="result" hidden>
+            <div class="center"><span id="result-badge" class="badge"></span></div>
+
+            <div class="heard">
+              <div class="lbl" data-i18n="heard"></div>
+              <div id="heard-val" class="val"></div>
+            </div>
+
+            <div class="meter">
+              <div class="meter-head"><span data-i18n="match"></span><span id="sim-pct">—</span></div>
+              <div class="track"><div id="sim-fill" class="fill"></div></div>
+            </div>
+
+            <div id="feedback-text" class="feedback"></div>
+
+            <div class="meta-line">
+              <span id="dur-chip" class="chip"></span>
+              <span id="detect-chip" class="chip"></span>
+            </div>
+
+            <div class="result-actions">
+              <button id="repeat-btn" class="btn btn-warn"><svg class="ico" aria-hidden="true"><use href="#i-undo"></use></svg><span data-i18n="repeat"></span></button>
+              <button id="skip-btn"   class="btn btn-muted"><svg class="ico" aria-hidden="true"><use href="#i-skip"></use></svg><span data-i18n="skip"></span></button>
+              <button id="next-btn"   class="btn btn-good" hidden><svg class="ico" aria-hidden="true"><use href="#i-next"></use></svg><span data-i18n="next"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Screen 4: summary ── -->
+    <section id="screen-summary" class="screen" hidden>
+      <div class="card center">
+        <svg class="summary-mark" aria-hidden="true"><use href="#i-trophy"></use></svg>
+        <h1 class="headline" data-i18n="session_complete"></h1>
+        <p class="subhead" data-i18n="session_complete_sub"></p>
+        <div id="summary-grid" class="summary-grid"></div>
+        <div class="result-actions">
+          <button id="again-btn"         class="btn btn-primary btn-lg" data-i18n="practice_again"></button>
+          <button id="summary-level-btn" class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-levels"></use></svg><span data-i18n="change_level"></span></button>
+          <button id="summary-lang-btn"  class="btn btn-soft"><svg class="ico" aria-hidden="true"><use href="#i-globe"></use></svg><span data-i18n="change_language"></span></button>
+        </div>
+      </div>
+    </section>
+
   </main>
 
-  <script>
-    // Smoke test that the API and the static mount are both wired.
-    (async () => {
-      const el = document.getElementById("status");
-      try {
-        const [h, c] = await Promise.all([
-          fetch("/health").then((r) => r.json()),
-          fetch("/config").then((r) => r.json()),
-        ]);
-        el.textContent = `health: ${h.status} · sarvam key: ${c.sarvam_key_present ? "loaded" : "MISSING"}`;
-      } catch (e) {
-        el.textContent = `api unreachable: ${e.message}`;
-      }
-    })();
-  </script>
+  <script src="recorder.js"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

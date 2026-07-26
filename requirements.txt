@@ -1,4 +1,4 @@
-# Scaffold only — add what the build actually needs, when it needs it.
+# Vaani drill — Sarvam ASR (Saaras) + TTS (Bulbul), FastAPI, SQLite.
 
 fastapi>=0.115.0
 uvicorn>=0.30.0

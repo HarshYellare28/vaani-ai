@@ -1,0 +1,236 @@
+{
+  "en": {
+    "meta": {
+      "native": "English",
+      "flag": "🔤",
+      "dir": "ltr",
+      "tts_lang": "en-IN",
+      "speaker": "priya"
+    },
+    "ui": {
+      "who_practicing": "Who is practicing today?",
+      "who_practicing_sub": "Choose a patient to begin",
+      "add_patient": "Add patient",
+      "patient_name_prompt": "Patient name:",
+      "choose_language": "Choose a language",
+      "choose_language_sub": "Which language would you like to practice?",
+      "choose_level": "Choose a level",
+      "choose_level_sub": "Start easy and work your way up",
+      "groups": "Groups",
+      "group": "Group",
+      "level": "Level",
+      "word": "Word",
+      "words": "words",
+      "listen": "Listen",
+      "speak": "Speak",
+      "stop": "Stop",
+      "heard": "Heard",
+      "match": "Match",
+      "duration": "Duration",
+      "repeat": "Repeat",
+      "skip": "Skip",
+      "next": "Next",
+      "restart": "Restart",
+      "end": "End session",
+      "change_language": "Change language",
+      "change_level": "Change level",
+      "session_complete": "Session complete",
+      "session_complete_sub": "Great work today",
+      "attempts": "Attempts",
+      "correct": "Correct",
+      "accuracy": "Accuracy",
+      "avg_match": "Avg. match",
+      "practice_again": "Practice again",
+      "menu": "Menu",
+      "patient": "Patient",
+      "playing": "Playing…",
+      "audio_error": "Couldn't play audio",
+      "allow_mic": "Please allow microphone access",
+      "recording_hint": "Listening… tap again when done",
+      "no_audio": "Didn't catch that — please speak again",
+      "checking": "Checking…",
+      "error_retry": "Something went wrong — try again",
+      "nothing": "— (nothing)"
+    },
+    "levels": {
+      "1": {
+        "name": "Easy",
+        "desc": "Short, everyday words"
+      },
+      "2": {
+        "name": "Medium",
+        "desc": "Longer words"
+      },
+      "3": {
+        "name": "Hard",
+        "desc": "Difficult words and phrases"
+      }
+    },
+    "badges": {
+      "correct": "Correct",
+      "incorrect": "Try again",
+      "no_speech": "Not heard"
+    },
+    "feedback": {
+      "correct": "Excellent!",
+      "no_speech": "I didn't hear you — '{word}'.",
+      "incorrect": "Once more, slowly — '{word}'."
+    }
+  },
+  "hi": {
+    "meta": {
+      "native": "हिन्दी",
+      "flag": "🇮🇳",
+      "dir": "ltr",
+      "tts_lang": "hi-IN",
+      "speaker": "priya"
+    },
+    "ui": {
+      "who_practicing": "आज कौन अभ्यास कर रहा है?",
+      "who_practicing_sub": "शुरू करने के लिए मरीज़ चुनें",
+      "add_patient": "नया मरीज़",
+      "patient_name_prompt": "मरीज़ का नाम:",
+      "choose_language": "भाषा चुनिए",
+      "choose_language_sub": "आप कौन सी भाषा का अभ्यास करना चाहते हैं?",
+      "choose_level": "स्तर चुनिए",
+      "choose_level_sub": "आसान से शुरू करें, धीरे-धीरे आगे बढ़ें",
+      "groups": "समूह",
+      "group": "समूह",
+      "level": "स्तर",
+      "word": "शब्द",
+      "words": "शब्द",
+      "listen": "सुनिए",
+      "speak": "बोलिए",
+      "stop": "रोकें",
+      "heard": "सुना गया",
+      "match": "मिलान",
+      "duration": "अवधि",
+      "repeat": "फिर से",
+      "skip": "छोड़ें",
+      "next": "अगला",
+      "restart": "फिर से शुरू",
+      "end": "सत्र समाप्त",
+      "change_language": "भाषा बदलें",
+      "change_level": "स्तर बदलें",
+      "session_complete": "सत्र समाप्त",
+      "session_complete_sub": "आज का अभ्यास बहुत अच्छा रहा",
+      "attempts": "प्रयास",
+      "correct": "सही",
+      "accuracy": "शुद्धता",
+      "avg_match": "औसत मिलान",
+      "practice_again": "फिर से अभ्यास",
+      "menu": "मेन्यू",
+      "patient": "मरीज़",
+      "playing": "सुनिए…",
+      "audio_error": "ध्वनि नहीं चली",
+      "allow_mic": "माइक की अनुमति दें",
+      "recording_hint": "बोलिए… पूरा होने पर फिर दबाएं",
+      "no_audio": "कुछ सुनाई नहीं दिया — फिर बोलें",
+      "checking": "जाँच हो रही है…",
+      "error_retry": "कुछ गड़बड़ हुई — फिर कोशिश करें",
+      "nothing": "— (कुछ नहीं)"
+    },
+    "levels": {
+      "1": {
+        "name": "आसान",
+        "desc": "छोटे, रोज़मर्रा के शब्द"
+      },
+      "2": {
+        "name": "मध्यम",
+        "desc": "लंबे शब्द"
+      },
+      "3": {
+        "name": "कठिन",
+        "desc": "कठिन शब्द और वाक्यांश"
+      }
+    },
+    "badges": {
+      "correct": "सही",
+      "incorrect": "फिर से",
+      "no_speech": "सुनाई नहीं दिया"
+    },
+    "feedback": {
+      "correct": "बहुत बढ़िया!",
+      "no_speech": "सुनाई नहीं दिया — '{word}'।",
+      "incorrect": "धीरे से, एक बार और — '{word}'।"
+    }
+  },
+  "kn": {
+    "meta": {
+      "native": "ಕನ್ನಡ",
+      "flag": "ಕ",
+      "dir": "ltr",
+      "tts_lang": "kn-IN",
+      "speaker": "priya"
+    },
+    "ui": {
+      "who_practicing": "ಇಂದು ಯಾರು ಅಭ್ಯಾಸ ಮಾಡುತ್ತಿದ್ದಾರೆ?",
+      "who_practicing_sub": "ಪ್ರಾರಂಭಿಸಲು ರೋಗಿಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ",
+      "add_patient": "ರೋಗಿಯನ್ನು ಸೇರಿಸಿ",
+      "patient_name_prompt": "ರೋಗಿಯ ಹೆಸರು:",
+      "choose_language": "ಭಾಷೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ",
+      "choose_language_sub": "ಯಾವ ಭಾಷೆಯಲ್ಲಿ ಅಭ್ಯಾಸ ಮಾಡುತ್ತೀರಿ?",
+      "choose_level": "ಹಂತವನ್ನು ಆಯ್ಕೆ ಮಾಡಿ",
+      "choose_level_sub": "ಸುಲಭದಿಂದ ಪ್ರಾರಂಭಿಸಿ, ಕ್ರಮೇಣ ಮುಂದುವರಿಯಿರಿ",
+      "groups": "ಗುಂಪುಗಳು",
+      "group": "ಗುಂಪು",
+      "level": "ಹಂತ",
+      "word": "ಪದ",
+      "words": "ಪದಗಳು",
+      "listen": "ಕೇಳಿ",
+      "speak": "ಮಾತನಾಡಿ",
+      "stop": "ನಿಲ್ಲಿಸಿ",
+      "heard": "ಕೇಳಿಸಿದ್ದು",
+      "match": "ಹೊಂದಿಕೆ",
+      "duration": "ಅವಧಿ",
+      "repeat": "ಮತ್ತೊಮ್ಮೆ",
+      "skip": "ಬಿಟ್ಟುಬಿಡಿ",
+      "next": "ಮುಂದೆ",
+      "restart": "ಮತ್ತೆ ಪ್ರಾರಂಭಿಸಿ",
+      "end": "ಅಭ್ಯಾಸ ಮುಗಿಸಿ",
+      "change_language": "ಭಾಷೆ ಬದಲಾಯಿಸಿ",
+      "change_level": "ಹಂತ ಬದಲಾಯಿಸಿ",
+      "session_complete": "ಅಭ್ಯಾಸ ಮುಗಿಯಿತು",
+      "session_complete_sub": "ಇಂದು ಚೆನ್ನಾಗಿ ಮಾಡಿದಿರಿ",
+      "attempts": "ಪ್ರಯತ್ನಗಳು",
+      "correct": "ಸರಿ",
+      "accuracy": "ನಿಖರತೆ",
+      "avg_match": "ಸರಾಸರಿ ಹೊಂದಿಕೆ",
+      "practice_again": "ಮತ್ತೆ ಅಭ್ಯಾಸ ಮಾಡಿ",
+      "menu": "ಮೆನು",
+      "patient": "ರೋಗಿ",
+      "playing": "ನುಡಿಸುತ್ತಿದೆ…",
+      "audio_error": "ಧ್ವನಿ ನುಡಿಸಲು ಆಗಲಿಲ್ಲ",
+      "allow_mic": "ದಯವಿಟ್ಟು ಮೈಕ್ರೊಫೋನ್ ಬಳಸಲು ಅನುಮತಿ ನೀಡಿ",
+      "recording_hint": "ಕೇಳುತ್ತಿದೆ… ಮುಗಿದಾಗ ಮತ್ತೆ ಒತ್ತಿ",
+      "no_audio": "ಕೇಳಿಸಲಿಲ್ಲ — ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಹೇಳಿ",
+      "checking": "ಪರಿಶೀಲಿಸುತ್ತಿದೆ…",
+      "error_retry": "ಏನೋ ತಪ್ಪಾಯಿತು — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+      "nothing": "— (ಏನೂ ಇಲ್ಲ)"
+    },
+    "levels": {
+      "1": {
+        "name": "ಸುಲಭ",
+        "desc": "ಚಿಕ್ಕ, ದಿನನಿತ್ಯದ ಪದಗಳು"
+      },
+      "2": {
+        "name": "ಮಧ್ಯಮ",
+        "desc": "ಉದ್ದವಾದ ಪದಗಳು"
+      },
+      "3": {
+        "name": "ಕಠಿಣ",
+        "desc": "ಕಷ್ಟಕರ ಪದಗಳು ಮತ್ತು ವಾಕ್ಯಗಳು"
+      }
+    },
+    "badges": {
+      "correct": "ಸರಿ",
+      "incorrect": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+      "no_speech": "ಕೇಳಿಸಲಿಲ್ಲ"
+    },
+    "feedback": {
+      "correct": "ಚೆನ್ನಾಗಿದೆ!",
+      "no_speech": "ಕೇಳಿಸಲಿಲ್ಲ — '{word}'.",
+      "incorrect": "ನಿಧಾನವಾಗಿ, ಇನ್ನೊಮ್ಮೆ — '{word}'."
+    }
+  }
+}

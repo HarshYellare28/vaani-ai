@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vaani",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["api:app", "--port", "8000", "--reload", "--reload-include", "*.json"],
+      "port": 8000
+    }
+  ]
+}

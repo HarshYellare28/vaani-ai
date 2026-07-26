@@ -1,0 +1,255 @@
+"""FastAPI surface — serves the web app and the drill API (Sarvam-only).
+
+Run:  uvicorn api:app --reload --host 0.0.0.0 --port 8000
+Then open http://localhost:8000  (localhost is a secure context, so the mic works)
+
+Flow: pick user → language → level → group → per word: prompt, record, evaluate.
+
+API:
+  GET  /users                                -> patient list
+  POST /users                                -> create patient {name}
+  GET  /languages                            -> available languages + word counts
+  GET  /levels?language=hi-IN                -> levels for a language + word counts
+  GET  /groups?language=hi-IN&level=1&user_id=1  -> groups with per-user scores
+  GET  /words?language=hi-IN&level=1&group=1 -> drill words (optionally filtered)
+  POST /session/start                        -> {session_id}  (form: language, level, user_id, group_num)
+  POST /session/{id}/end                     -> session summary
+  POST /prompt                               -> WAV audio of a target word
+  POST /evaluate                             -> assessment + decision + feedback (persisted)
+"""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+import hmac
+import os
+import secrets
+import time
+
+from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+)
+from fastapi.staticfiles import StaticFiles
+
+from vaani import Config, Database, StaticDrill, setup_logging
+from vaani.i18n import load_locales
+
+setup_logging()
+config = Config.from_env()
+drill = StaticDrill(config)
+db = Database(config.db_path)
+db.seed_words()   # idempotent (seed_users runs inside Database.__init__)
+
+app = FastAPI(title="Vaani", version="0.1.0")
+
+# ── Passcode gate (set VAANI_BASIC_PASS in env to enable) ─────────────
+# Cookie-based, not HTTP Basic: the browser's Basic-auth dialog is unreliable
+# with fetch()/XHR (it re-prompts on every API call). A signed cookie set once
+# at /login rides along on every fetch + audio request automatically. Useful
+# once the app is exposed via a public tunnel for the demo.
+_BASIC_PASS = os.getenv("VAANI_BASIC_PASS", "")
+_COOKIE_NAME = "vaani_auth"
+_COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
+# Paths reachable without a valid cookie.
+_OPEN_PATHS = {"/health", "/login"}
+
+
+def _expected_token() -> str:
+    """Cookie value = HMAC(passcode, constant). Can't be forged without the passcode."""
+    return hmac.new(_BASIC_PASS.encode(), b"vaani-authenticated", hashlib.sha256).hexdigest()
+
+
+def _is_authed(request: Request) -> bool:
+    if not _BASIC_PASS:
+        return True
+    token = request.cookies.get(_COOKIE_NAME, "")
+    return secrets.compare_digest(token, _expected_token())
+
+
+_LOGIN_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vaani — Sign in</title>
+<style>
+  :root {{ color-scheme: light; }}
+  * {{ box-sizing: border-box; }}
+  body {{ margin:0; min-height:100vh; display:grid; place-items:center;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(160deg,#eef2ff,#faf5ff); color:#1e1b4b; }}
+  .card {{ background:#fff; padding:2rem 1.75rem; border-radius:18px;
+    box-shadow:0 12px 40px rgba(79,70,229,.15); width:min(360px,92vw); text-align:center; }}
+  .logo {{ font-size:2.25rem; }}
+  h1 {{ font-size:1.4rem; margin:.4rem 0 .15rem; }}
+  p.sub {{ margin:0 0 1.4rem; color:#6b7280; font-size:.9rem; }}
+  input {{ width:100%; padding:.8rem .9rem; font-size:1.05rem; text-align:center;
+    border:1.5px solid #ddd6fe; border-radius:12px; outline:none; }}
+  input:focus {{ border-color:#6366f1; }}
+  button {{ width:100%; margin-top:.9rem; padding:.8rem; font-size:1.05rem; font-weight:600;
+    color:#fff; background:#6366f1; border:none; border-radius:12px; cursor:pointer; }}
+  button:hover {{ background:#4f46e5; }}
+  .err {{ color:#dc2626; font-size:.88rem; margin-top:.8rem; min-height:1.1em; }}
+</style></head>
+<body>
+  <form class="card" method="post" action="/login">
+    <div class="logo">🗣️</div>
+    <h1>Vaani</h1>
+    <p class="sub">Enter passcode</p>
+    <input name="passcode" type="password" autofocus autocomplete="current-password"
+           placeholder="Passcode" required>
+    <button type="submit">Enter</button>
+    <div class="err">{error}</div>
+  </form>
+</body></html>"""
+
+
+@app.get("/login")
+def login_page():
+    return HTMLResponse(_LOGIN_PAGE.format(error=""))
+
+
+@app.post("/login")
+def login_submit(passcode: str = Form(...)):
+    if _BASIC_PASS and secrets.compare_digest(passcode.encode(), _BASIC_PASS.encode()):
+        resp = RedirectResponse("/", status_code=303)
+        resp.set_cookie(
+            _COOKIE_NAME, _expected_token(),
+            max_age=_COOKIE_MAX_AGE, httponly=True, secure=True, samesite="lax",
+        )
+        return resp
+    return HTMLResponse(
+        _LOGIN_PAGE.format(error="Wrong passcode"), status_code=401
+    )
+
+
+@app.middleware("http")
+async def auth_gate(request: Request, call_next):
+    if request.url.path in _OPEN_PATHS or _is_authed(request):
+        return await call_next(request)
+    # Unauthenticated. Send browser navigations to the login page; APIs get JSON.
+    accept = request.headers.get("accept", "")
+    if request.method == "GET" and "text/html" in accept:
+        return RedirectResponse("/login", status_code=303)
+    return JSONResponse({"detail": "unauthorized"}, status_code=401)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/i18n")
+def i18n():
+    """The full locale table — UI strings, level names, badges, metadata.
+    The front-end picks a locale from this and flips the whole UI."""
+    return load_locales()
+
+
+# ── users ──────────────────────────────────────────────────────────────
+@app.get("/users")
+def users_list():
+    return db.list_users()
+
+
+@app.post("/users")
+def users_create(name: str = Form(...)):
+    user_id = db.create_user(name)
+    return {"user_id": user_id, "name": name}
+
+
+# ── data ──────────────────────────────────────────────────────────────
+@app.get("/languages")
+def languages():
+    return db.languages()
+
+
+@app.get("/levels")
+def levels(language: str):
+    return db.levels(language)
+
+
+@app.get("/groups")
+def groups(language: str, level: int, user_id: int):
+    return db.groups(language, level, user_id)
+
+
+@app.get("/words")
+def words(language: str | None = None, level: int | None = None, group: int | None = None):
+    return db.list_words(language, level, group)
+
+
+# ── session lifecycle ──────────────────────────────────────────────────
+@app.post("/session/start")
+def session_start(
+    language: str = Form(None),
+    level: int = Form(None),
+    user_id: int = Form(None),
+    group_num: int = Form(None),
+):
+    return {"session_id": db.create_session(language, level, user_id, group_num)}
+
+
+@app.post("/session/{session_id}/end")
+def session_end(session_id: int):
+    db.end_session(session_id)
+    return {"session_id": session_id, "summary": db.session_summary(session_id)}
+
+
+# ── drill ───────────────────────────────────────────────────────────────
+@app.post("/prompt")
+def prompt(word: str = Form(...), lang: str = Form("hi-IN")):
+    """Synthesize and return the spoken target word as a WAV."""
+    path = drill.prompt_word(word, language_code=lang)
+    return FileResponse(path, media_type="audio/wav", filename="prompt.wav")
+
+
+@app.post("/evaluate")
+async def evaluate(
+    word: str = Form(...),
+    session_id: int = Form(...),
+    language: str = Form("hi-IN"),
+    word_id: int | None = Form(None),
+    attempt: UploadFile = File(...),
+):
+    """Judge one recorded attempt, persist it, return assessment + feedback."""
+    tmp_path = f"/tmp/attempt_{int(time.time() * 1000)}.wav"
+    try:
+        with open(tmp_path, "wb") as f:
+            f.write(await attempt.read())
+        result = drill.evaluate_attempt(word, tmp_path, language=language)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except FileNotFoundError:
+            pass
+    a, d = result.assessment, result.decision
+
+    attempt_id = db.record_attempt(session_id, a, d, word_id=word_id)
+
+    with open(result.feedback_audio_path, "rb") as f:
+        feedback_b64 = base64.b64encode(f.read()).decode()
+
+    return JSONResponse({
+        "attempt_id": attempt_id,
+        "target_word": a.target_word,
+        "transcript": a.transcript,
+        "result_label": a.result_label,
+        "correct": a.correct,
+        "similarity": round(a.similarity, 2),
+        "audio_duration_sec": a.audio_duration_sec,
+        "language_detected": a.language_detected,
+        "language_probability": a.language_probability,
+        "decision": {
+            "action": d.action.value,
+            "feedback_text": d.feedback_text,
+        },
+        "feedback_audio_wav_b64": feedback_b64,
+    })
+
+
+# ── static web app (mounted last so it doesn't shadow the API routes) ───
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

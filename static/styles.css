@@ -1,0 +1,399 @@
+/* Vaani — production design system.
+   Calm, clinical, accessible. Large targets, high contrast, fully localized
+   (single language at a time), responsive 360px → desktop, RTL-aware. */
+
+:root {
+  --bg-1: #f5f7fc;
+  --bg-2: #eef1f9;
+  --surface: #ffffff;
+  --surface-2: #f5f7fb;
+  --ink: #1a2233;
+  --ink-soft: #5a6680;
+  --ink-faint: #8b95ab;
+  --line: #e7ebf3;
+
+  --primary: #5b53f0;
+  --primary-2: #7a6df6;
+  --primary-soft: #eeedfe;
+  --accent: #0fae9e;
+  --accent-2: #15c4b3;
+
+  --good: #12a150;  --good-soft: #e3f7ec;
+  --warn: #d97a06;  --warn-soft: #fdf0d8;
+  --bad:  #dd3b32;  --bad-soft:  #fde5e3;
+  --neutral: #64708a;
+
+  --appbar-bg: rgba(255,255,255,.78);
+  --glow-1: rgba(91,83,240,.07);
+  --glow-2: rgba(15,174,158,.07);
+
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 26px;
+  --sp-1: 6px; --sp-2: 12px; --sp-3: 18px; --sp-4: 26px; --sp-5: 38px;
+
+  --shadow-sm: 0 1px 2px rgba(20,28,55,.06), 0 2px 6px rgba(20,28,55,.05);
+  --shadow:    0 4px 14px -4px rgba(28,30,80,.12), 0 14px 36px -16px rgba(28,30,80,.22);
+  --shadow-lg: 0 10px 30px -8px rgba(28,30,80,.18);
+  --ring: 0 0 0 3px rgba(91,83,240,.30);
+
+  /* One stack for every script we drill in. The browser picks the first family
+     that actually covers each glyph, so naming the Noto Indic faces keeps
+     Kannada/Tamil/Telugu off the generic fallback, which renders their vowel
+     signs and conjuncts badly. */
+  --font: "Segoe UI", system-ui, -apple-system, "Noto Sans",
+          "Noto Sans Devanagari", "Noto Sans Kannada", "Noto Sans Tamil",
+          "Noto Sans Telugu", sans-serif;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────────
+   Only the tokens change; every component reads through them. Kept a touch
+   above pure black so the elevated cards still separate from the background,
+   and the accent colours are lifted because the light-mode values go muddy
+   against a dark surface. */
+[data-theme="dark"] {
+  --bg-1: #12172a;
+  --bg-2: #0a0d18;
+  --surface: #191f33;
+  --surface-2: #212840;
+  --ink: #eef1f9;
+  --ink-soft: #a8b2ca;
+  --ink-faint: #76819e;
+  --line: #2b3350;
+
+  --primary: #8b83ff;
+  --primary-2: #a79eff;
+  --primary-soft: #262a4d;
+  --accent: #2ad0bd;
+  --accent-2: #4fe0cf;
+
+  --good: #2ecc71;  --good-soft: #14301f;
+  --warn: #f0a132;  --warn-soft: #33260f;
+  --bad:  #ff6b60;  --bad-soft:  #37191a;
+  --neutral: #56618a;
+
+  --appbar-bg: rgba(18,23,42,.80);
+  --glow-1: rgba(139,131,255,.10);
+  --glow-2: rgba(42,208,189,.09);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.28);
+  --shadow:    0 4px 14px -4px rgba(0,0,0,.5), 0 14px 36px -16px rgba(0,0,0,.65);
+  --shadow-lg: 0 10px 30px -8px rgba(0,0,0,.6);
+  --ring: 0 0 0 3px rgba(139,131,255,.40);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink);
+  background:
+    radial-gradient(60rem 40rem at 100% -10%, var(--glow-1), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 110%, var(--glow-2), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+/* Buttons don't inherit colour by default — they fall back to the UA's
+   `buttontext`, which is black. That happened to look right on the light
+   surfaces and turned the picker cards near-invisible in dark mode, so opt
+   every button back into inheritance and let the few coloured variants
+   (.btn, .icon-btn, .menu-item-danger) override it. */
+button { font-family: inherit; color: inherit; }
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-sm); }
+[hidden] { display: none !important; }
+.center { text-align: center; }
+
+/* ── Icons ─────────────────────────────────────────────────────────────
+   The sprite in index.html is stroke-only, so colour follows currentColor and
+   one rule sizes every instance. Sized in em so icons scale with their button. */
+.ico {
+  width: 1.15em; height: 1.15em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── App bar ───────────────────────────────────────────────────────── */
+.appbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 10px clamp(14px, 4vw, 36px);
+  padding-top: max(10px, env(safe-area-inset-top));
+  background: var(--appbar-bg);
+  backdrop-filter: saturate(150%) blur(14px);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 20;
+}
+.brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.brand-mark {
+  width: 26px; height: 26px; flex: none;
+  fill: none; stroke: var(--primary); stroke-width: 2.6; stroke-linecap: round;
+}
+.brand-text {
+  font-size: 22px; font-weight: 800; letter-spacing: -.01em;
+  background: linear-gradient(120deg, var(--primary), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.appbar-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.status-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 13.5px; font-weight: 700;
+}
+.status-chip-soft { background: var(--surface-2); color: var(--ink-soft); }
+.status-chip .ico { width: 15px; height: 15px; stroke-width: 2.2; }
+.status-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Kebab menu */
+.menu-wrap { position: relative; }
+.icon-btn {
+  display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+  cursor: pointer; transition: background .15s, color .15s, box-shadow .2s;
+}
+.icon-btn:hover { background: var(--primary-soft); color: var(--primary); }
+.icon-btn .ico { width: 21px; height: 21px; stroke-width: 2.2; }
+/* "More" is three dots drawn as zero-length round-capped strokes. */
+.icon-btn .ico use[href="#i-more"] { stroke-width: 2.8; }
+.menu {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px);
+  min-width: 210px; padding: 7px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); box-shadow: var(--shadow-lg); z-index: 30;
+  animation: pop .14s ease-out both;
+}
+@keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+.menu-item {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 11px 12px; border: none; background: transparent;
+  border-radius: 10px; cursor: pointer; text-align: start;
+  font-size: 15px; font-weight: 600; color: var(--ink);
+}
+.menu-item:hover { background: var(--surface-2); }
+.menu-item .ico { width: 19px; height: 19px; color: var(--ink-faint); }
+.menu-item:hover .ico { color: var(--primary); }
+.menu-item-danger .ico, .menu-item-danger:hover .ico { color: var(--bad); }
+.menu-item-danger { color: var(--bad); }
+.menu-item-danger:hover { background: var(--bad-soft); }
+.menu-sep { height: 1px; background: var(--line); margin: 5px 6px; }
+
+/* ── Stage / screens / cards ───────────────────────────────────────── */
+.stage { display: flex; justify-content: center; padding: clamp(18px, 4vw, 44px) 16px; }
+.screen { width: min(640px, 100%); animation: rise .36s cubic-bezier(.22,.8,.3,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow);
+  padding: clamp(22px, 5vw, 40px);
+}
+
+.headline { text-align: center; margin: 0 0 6px; font-size: clamp(23px, 4vw, 30px); font-weight: 800; letter-spacing: -.01em; }
+.subhead { text-align: center; color: var(--ink-soft); margin: 0 0 var(--sp-4); font-size: 16px; }
+
+/* ── Pickers (language / level) ────────────────────────────────────── */
+.pick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+@media (max-width: 480px) { .pick-grid { grid-template-columns: 1fr; } }
+.pick-card {
+  border: 1.5px solid var(--line); background: var(--surface);
+  border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-3);
+  cursor: pointer; text-align: center;
+  transition: transform .15s cubic-bezier(.22,.8,.3,1), border-color .15s, box-shadow .2s;
+}
+.pick-card:hover { border-color: var(--primary); box-shadow: var(--shadow); transform: translateY(-3px); }
+.pick-card:active { transform: translateY(-1px) scale(.99); }
+.pick-flag { font-size: 40px; line-height: 1; }
+/* Level cards use a sprite icon where language cards use a script glyph. */
+.pick-ico { width: 42px; height: 42px; stroke-width: 2.4; color: var(--primary); }
+.pick-name { font-size: 24px; font-weight: 800; margin-top: 8px; }
+.pick-meta { color: var(--ink-faint); font-size: 14px; margin-top: 4px; }
+.pick-desc { color: var(--ink-soft); font-size: 13.5px; margin-top: 6px; }
+
+/* ── User picker ───────────────────────────────────────────────────── */
+.user-grid { display: flex; flex-wrap: wrap; gap: var(--sp-3); justify-content: center; }
+.user-card {
+  border: 1.5px solid var(--line); background: var(--surface);
+  border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
+  cursor: pointer; text-align: center; min-width: 150px;
+  transition: transform .15s cubic-bezier(.22,.8,.3,1), border-color .15s, box-shadow .2s;
+}
+.user-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow); }
+.user-avatar {
+  width: 60px; height: 60px; margin: 0 auto;
+  display: grid; place-items: center; border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary-soft), rgba(15,174,158,.14));
+}
+.avatar-ico { width: 30px; height: 30px; color: var(--primary); }
+.user-name { font-size: 19px; font-weight: 700; margin-top: 12px; }
+
+/* ── Buttons ───────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  border: none; border-radius: var(--r-md); cursor: pointer;
+  padding: 13px 20px; font-size: 16px; font-weight: 700; color: #fff;
+  background: var(--neutral);
+  transition: transform .12s cubic-bezier(.22,.8,.3,1), filter .15s, box-shadow .2s;
+  box-shadow: var(--shadow-sm);
+}
+.btn .ico { stroke-width: 2.2; }
+.btn:hover { transform: translateY(-2px); filter: brightness(1.04); box-shadow: var(--shadow); }
+.btn:active { transform: translateY(0) scale(.97); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; filter: none; box-shadow: var(--shadow-sm); }
+.btn-lg { font-size: 20px; padding: 20px 30px; min-width: 160px; border-radius: var(--r-lg); }
+.btn-primary { background: linear-gradient(135deg, var(--primary-2), var(--primary)); box-shadow: 0 8px 20px -8px rgba(91,83,240,.6); }
+.btn-accent  { background: linear-gradient(135deg, var(--accent-2), var(--accent)); box-shadow: 0 8px 20px -8px rgba(15,174,158,.6); }
+.btn-good    { background: linear-gradient(135deg, #1bbf63, var(--good)); }
+.btn-warn    { background: linear-gradient(135deg, #ef9b26, var(--warn)); }
+.btn-muted   { background: var(--neutral); }
+.btn-soft {
+  background: var(--surface-2); color: var(--ink-soft); box-shadow: none;
+  border: 1px solid var(--line); font-weight: 600;
+}
+.btn-soft:hover { background: var(--primary-soft); color: var(--primary); }
+.btn.rec { background: linear-gradient(135deg, #ef4d44, var(--bad)); animation: pulse 1.3s infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 8px 20px -8px rgba(221,59,50,.6), 0 0 0 0 rgba(221,59,50,.28); }
+  50%     { box-shadow: 0 8px 20px -8px rgba(221,59,50,.6), 0 0 0 13px rgba(221,59,50,0); }
+}
+
+/* ── Drill layout ──────────────────────────────────────────────────── */
+.screen-drill { display: flex; align-items: flex-start; gap: var(--sp-4); width: min(960px, 100%); }
+.drill-main { flex: 1; min-width: 0; }
+
+.group-sidebar {
+  width: 210px; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-xl); box-shadow: var(--shadow-sm);
+  padding: var(--sp-3); position: sticky; top: 76px;
+  max-height: calc(100vh - 100px); overflow-y: auto;
+}
+.sidebar-title {
+  font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--ink-faint); margin-bottom: var(--sp-2);
+  padding-bottom: var(--sp-1); border-bottom: 1px solid var(--line);
+}
+.group-list { display: flex; flex-direction: column; gap: 7px; }
+.group-item {
+  width: 100%; text-align: start;
+  background: var(--surface-2); border: 1.5px solid transparent;
+  border-radius: var(--r-md); padding: 10px 12px; cursor: pointer;
+  transition: border-color .14s, background .14s, transform .12s;
+}
+.group-item:hover  { border-color: rgba(91,83,240,.4); background: var(--primary-soft); }
+.group-item.active { border-color: var(--primary); background: var(--primary-soft); }
+.group-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.group-name { font-size: 13px; font-weight: 700; }
+.group-score { font-size: 12px; font-weight: 800; }
+.score-done { color: var(--good); } .score-partial { color: var(--warn); } .score-zero { color: var(--ink-faint); }
+.group-bar { height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.group-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 999px; transition: width .5s cubic-bezier(.22,.8,.3,1); }
+
+/* ── Word card ─────────────────────────────────────────────────────── */
+.word-card { text-align: center; }
+.progress-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: var(--sp-2); }
+.progress-label { font-size: 13.5px; color: var(--ink-soft); font-weight: 700; }
+.level-chip { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: var(--surface-2); color: var(--neutral); border: 1px solid var(--line); white-space: nowrap; }
+.progress-track { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; margin-bottom: var(--sp-4); }
+.progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 999px; transition: width .5s cubic-bezier(.22,.8,.3,1); }
+
+.word-stage { padding: var(--sp-3) 0 var(--sp-2); }
+/* The target word is the whole point of the screen, so it gets the size to
+   match — readable across a room, and legible to a patient with low vision.
+   renderWord() replays the animation on each advance by forcing a reflow. */
+.word {
+  font-size: clamp(54px, 15vw, 104px); font-weight: 800; line-height: 1.04;
+  letter-spacing: -.025em; color: var(--ink); word-break: break-word;
+  animation: wordIn .34s cubic-bezier(.22,.9,.3,1) both;
+}
+@keyframes wordIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.gloss { font-size: 17px; color: var(--ink-soft); margin-top: 10px; min-height: 20px; }
+.word-category {
+  display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 700;
+  color: var(--accent); background: rgba(15,174,158,.10);
+  border: 1px solid rgba(15,174,158,.22); padding: 5px 13px; border-radius: 999px;
+}
+.word-category:empty { display: none; }
+
+.actions { display: flex; gap: var(--sp-3); justify-content: center; margin-top: var(--sp-4); flex-wrap: wrap; }
+.status { text-align: center; min-height: 22px; color: var(--ink-soft); font-size: 15px; margin-top: var(--sp-3); font-weight: 500; }
+
+/* Live mic level. Height is fixed in the markup; width is fluid and the canvas
+   backing store is re-sized on DPR change in waveDraw(). */
+.wave {
+  display: block; width: 100%; height: 64px; margin-top: var(--sp-3);
+  animation: rise .25s ease-out both;
+}
+
+/* ── Result ────────────────────────────────────────────────────────── */
+.result { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--line); animation: rise .3s ease-out both; }
+.badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 999px; font-size: 16px; font-weight: 800;
+  animation: badgeIn .34s cubic-bezier(.2,1.5,.4,1) both;
+}
+.badge .ico { stroke-width: 2.6; }
+@keyframes badgeIn { from { opacity: 0; transform: scale(.82); } }
+.badge.correct   { background: var(--good-soft); color: var(--good); }
+.badge.incorrect { background: var(--bad-soft);  color: var(--bad); }
+.badge.no_speech { background: var(--surface-2); color: var(--neutral); }
+
+.heard { margin: var(--sp-3) 0; padding: var(--sp-3); background: var(--surface-2); border-radius: var(--r-md); border: 1px solid var(--line); }
+.heard .lbl { font-size: 12.5px; color: var(--ink-faint); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.heard .val { font-size: 26px; font-weight: 800; margin-top: 4px; word-break: break-word; }
+.heard .val.empty { color: var(--ink-faint); font-weight: 600; font-size: 18px; }
+
+.meter { margin-bottom: var(--sp-3); }
+.meter-head { font-size: 13px; color: var(--ink-soft); display: flex; justify-content: space-between; font-weight: 600; }
+.track { height: 9px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.22,.8,.3,1); }
+.fill.good { background: linear-gradient(90deg, #1bbf63, var(--good)); }
+.fill.bad  { background: linear-gradient(90deg, #ef6a44, var(--warn)); }
+
+.feedback { font-size: 20px; font-weight: 700; margin: var(--sp-3) 0; text-align: center; line-height: 1.4; }
+.meta-line { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); background: var(--surface-2); border: 1px solid var(--line); padding: 4px 10px; border-radius: 8px; }
+.chip .ico { width: 13px; height: 13px; }
+.result-actions { display: flex; gap: var(--sp-2); justify-content: center; flex-wrap: wrap; }
+
+/* ── Summary ───────────────────────────────────────────────────────── */
+.summary-mark {
+  width: 54px; height: 54px; color: var(--primary);
+  fill: none; stroke: currentColor; stroke-width: 1.9;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); margin: var(--sp-4) 0; }
+.stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-3); text-align: center; }
+.stat .num { font-size: 34px; font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat .lbl { font-size: 13px; color: var(--ink-soft); margin-top: 6px; font-weight: 600; }
+
+/* ── Mobile: stack sidebar as a horizontal scroller ────────────────── */
+@media (max-width: 720px) {
+  .screen-drill { flex-direction: column; }
+  .group-sidebar {
+    width: 100%; position: static; max-height: none; overflow: visible;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .group-list { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding-bottom: 4px; }
+  .group-item { flex: 0 0 auto; min-width: 122px; }
+  .btn-lg { flex: 1 1 0; min-width: 0; }
+}
+
+/* Keep the app bar uncrowded on small phones — patient chip is enough there. */
+@media (max-width: 420px) {
+  .status-chip { max-width: 38vw; }
+  .status-chip-soft { display: none; }
+}
+
+/* ── Spinner / motion ──────────────────────────────────────────────── */
+.spinner { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; vertical-align: -3px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

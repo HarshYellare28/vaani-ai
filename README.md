@@ -1,7 +1,9 @@
 # Sarvam Epoch Buildathon — 26 Jul 2026
 
-Standard FastAPI scaffold plus the control-plane docs. **No product code yet** —
-that gets written during the sprint.
+A between-visits speech practice tool for post-stroke aphasia. Word-target
+drill: record an attempt, Saaras v3 transcribes it, the transcript is judged
+against the target, Bulbul speaks feedback. See `SCOPE.md` for the product and
+`JUDGE.md` for where this goes next (the LLM judge layer, SLP view).
 
 ## Run
 
@@ -9,13 +11,15 @@ that gets written during the sprint.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env          # add the event Sarvam key
-uvicorn app.main:app --port 8000 --reload --reload-include '*.json'
+uvicorn api:app --port 8000 --reload --reload-include '*.json'
 ```
 
-Open **http://localhost:8000** — it should say `health: ok · sarvam key: loaded`.
+Open **http://localhost:8000**.
 
 Use `localhost`, not the LAN IP: `getUserMedia` requires a secure context, and
-`192.168.x.x` is not one, so the mic silently fails there.
+`192.168.x.x` is not one, so the mic silently fails there. To demo on a phone
+or over wifi, run `./scripts/tunnel.sh` in a second terminal for a public
+HTTPS URL (Cloudflare quick tunnel) instead.
 
 ## Files
 
@@ -28,7 +32,10 @@ Use `localhost`, not the LAN IP: `getUserMedia` requires a secure context, and
 | `docs/FIELD_NOTES.md` | Sarvam API gotchas learned the hard way. |
 | `UI.md` | Design intent for anything user-facing. |
 | `JUDGE.md` | The judge layer: verified API recipe, traps, architecture. |
-| `app/main.py` | Generic scaffold: health, config, static mount. |
+| `api.py` | FastAPI app: drill endpoints + static mount. |
+| `vaani/` | Sarvam ASR/TTS clients, matching, decisions, SQLite persistence. |
+| `run_drill.py` | CLI to prompt/score a word against a WAV file, without the browser. |
+| `scripts/tunnel.sh` | Public HTTPS tunnel (Cloudflare) for demoing off localhost. |
 
 ## Driving the build
 
