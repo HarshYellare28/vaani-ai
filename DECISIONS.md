@@ -221,4 +221,18 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   verbatim="Knife") — now displays "Knife" — and confirmed static mode is
   untouched.
 
+- `16:1x` — dynamic mode auto-advances on a correct attempt after a 2s pause,
+  no "Next" tap needed — incorrect still waits for the patient (cue +
+  manual retry, never rushed). Deliberate exception to UI.md's "nothing is
+  timed, no auto-advance" rule: discussed the conflict directly before
+  building it — this isn't a countdown or a cutoff, it's a fixed pause after
+  success so the adaptive loop reads as continuous, and it only ever fires
+  on success, never on struggle (where the "waits" principle is load-
+  bearing). Timer is cleared on every manual navigation path
+  (`renderWord`, `endSession`) so it can never fire against the wrong word
+  or after the patient has already left the screen. Verified: index
+  auto-advanced with zero interaction ~2.4s after a synthetic correct
+  result; the two real incorrect attempts made during testing correctly did
+  not advance.
+
 <!-- append below -->

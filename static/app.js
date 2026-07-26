@@ -92,6 +92,11 @@ const state = {
   sessionId: null, recorder: null, recording: false,
 };
 
+// Dynamic mode only: auto-advance after a correct attempt, cleared on any
+// manual navigation so it can never fire against the wrong word.
+let autoAdvanceTimer = null;
+const AUTO_ADVANCE_MS = 2000;
+
 // ── audio helpers ───────────────────────────────────────────────────
 function playBlob(blob) {
   const url = URL.createObjectURL(blob);
@@ -372,6 +377,7 @@ async function chooseGroup(groupNum) {
 function currentWord() { return state.words[state.index]; }
 
 function renderWord() {
+  clearTimeout(autoAdvanceTimer);
   const w = currentWord();
   if (state.mode === "dynamic") {
     // No fixed total to count against — the judge extends the list one word
@@ -534,6 +540,16 @@ function renderResult(d) {
     // IS the adaptive behavior, so don't gate "Next" on getting it right.
     if (d.next_word) state.words.push(d.next_word);
     $("next-btn").hidden = !d.next_word;  // no candidates left → let skip/end handle it
+    // Correct → the judge's adaptation continues on its own; a deliberate
+    // pause (not a countdown, nothing visibly ticking) rather than requiring
+    // a tap, so the adaptive loop reads as continuous. Incorrect still waits
+    // for the patient — they need the cue and a real retry, never rushed.
+    clearTimeout(autoAdvanceTimer);
+    if (d.correct && d.next_word) {
+      autoAdvanceTimer = setTimeout(() => {
+        if (!$("screen-drill").hidden) nextWord();
+      }, AUTO_ADVANCE_MS);
+    }
   } else {
     $("next-btn").hidden = !d.correct;
     if (d.correct) refreshGroupScores();
@@ -603,6 +619,7 @@ async function restart() {
 }
 
 async function endSession() {
+  clearTimeout(autoAdvanceTimer);
   let s = { attempts: 0, correct: 0, avg_similarity: null, avg_duration: null };
   if (state.sessionId) {
     const r = await (await fetch(`/session/${state.sessionId}/end`, { method: "POST" })).json();
