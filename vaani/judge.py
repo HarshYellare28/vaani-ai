@@ -28,7 +28,7 @@ import requests
 
 from .config import Config
 from .http_retry import post_with_retry
-from .textutils import classify
+from .textutils import CORRECT, classify
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +83,12 @@ never completing it.
    - no_attempt: nothing intelligible, silence, or an unrelated word.
    RULE: if heard_verbatim is empty or whitespace, the answer is ALWAYS \
 no_attempt — never guess a paraphasia type from silence.
+   RULE: the input field `verified_matches_target` is a deterministic string \
+comparison computed before you were called. If it is true, the patient DID \
+produce the target — error_type MUST be correct (or effortful_correct if \
+heard_verbatim also shows false starts or repetition). Never return a \
+paraphasia or no_attempt when verified_matches_target is true, no matter \
+what the session history looks like.
    RULE: error_type is decided ONLY by comparing heard_verbatim to \
 target_word for THIS attempt. session_history describes PAST attempts on \
 DIFFERENT words — it is irrelevant to this classification and must never \
@@ -177,6 +183,12 @@ class SarvamJudge:
         if not candidates:
             return self._fallback(target_word, transcript_verbatim, None, "no candidates left")
 
+        # Does the patient's own verbatim production already match the target?
+        # If so that is a settled fact, not something to ask an LLM about —
+        # see the override below.
+        local_label, _ = classify(transcript_verbatim, target_word)
+        verified_correct = local_label == CORRECT
+
         candidate_ids = {c["id"] for c in candidates}
         schema = dict(_RESPONSE_SCHEMA)
         schema["properties"] = dict(_RESPONSE_SCHEMA["properties"])
@@ -188,6 +200,10 @@ class SarvamJudge:
             "target_word": target_word,
             "heard_normalised": transcript,
             "heard_verbatim": transcript_verbatim,
+            # Deterministic string comparison, computed before the call. When
+            # true, step 1 is already settled — say so rather than letting the
+            # model re-derive it from a losing streak.
+            "verified_matches_target": verified_correct,
             "candidates": [
                 {k: c[k] for k in ("id", "text", "word_type", "category", "level")}
                 for c in candidates
@@ -231,12 +247,33 @@ class SarvamJudge:
                 if error_type not in ERROR_TYPES or next_word_id not in candidate_ids:
                     log.warning("Judge call %d/2: invalid error_type/next_word_id, retrying", attempt)
                     continue
+
+                cue_hint = parsed.get("cue_hint", "")
+                # GUARDRAIL. Measured failure: given a session_history of
+                # no_speech results, the model anchors on the streak and
+                # returns no_attempt for a verbatim transcript that exactly
+                # matches the target (4/4 trials; 0/3 with the same input and
+                # an empty history). Prompt rules did not hold. The worst
+                # possible failure for this product — the struggling patient
+                # is the target user, and the app would refuse to credit their
+                # correct answer *because* they had been struggling. A
+                # normalised exact/near match to the target IS the target, so
+                # that verdict is not the model's to overturn.
+                if verified_correct and error_type not in ("correct", "effortful_correct"):
+                    log.warning(
+                        "Judge override: verbatim %r matches target %r but model said %s "
+                        "— forcing correct (history-anchoring guard)",
+                        transcript_verbatim, target_word, error_type,
+                    )
+                    error_type = "correct"
+                    cue_hint = ""  # nothing to cue; they said it right
+
                 return JudgeResult(
                     error_type=error_type,
                     result_label=_ERROR_TO_LABEL[error_type],
                     next_word_id=next_word_id,
                     next_word_reason=parsed.get("next_word_reason", ""),
-                    cue_hint=parsed.get("cue_hint", ""),
+                    cue_hint=cue_hint,
                 )
             except (requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as e:
                 log.warning("Judge call %d/2 failed: %s", attempt, e)

@@ -173,3 +173,24 @@ approach you rejected and why, anything a fresh assistant would otherwise redo.
   tooth/teeth) — all pass.
 
 <!-- append below -->
+
+- `15:3x` — found and fixed a demo-killing judge bug during an outside-in audit.
+  Symptom (reported as a TTS problem): "it says I didn't hear you and suddenly
+  says <word>". Real cause: five consecutive live attempts (ids 38-42) where
+  `transcript_verbatim` was exactly "Cat" against target "cat" — a perfect
+  match — were classified `no_attempt`. Isolated it: same input with an EMPTY
+  session_history classifies `correct` 3/3; with a history of `no_speech`
+  results it classifies `no_attempt` 4/4. **The failure streak in
+  session_history anchors the model and it repeats the trend**, overriding
+  what it was actually shown. An explicit prompt rule forbidding exactly this
+  was already present and did NOT hold — prompt-level guards are not
+  sufficient here. Fixed in code, not prose: `judge_attempt` now runs
+  `classify(verbatim, target)` BEFORE the call, passes the result in as
+  `verified_matches_target`, and hard-overrides any paraphasia/no_attempt
+  verdict back to `correct` when that flag is true (clearing cue_hint too).
+  A normalised exact/near match to the target IS the target — not the model's
+  call to overturn. Verified 4/4 fixed with real errors still caught
+  (phonemic, semantic, no_attempt, tooth/teeth) and effortful_correct intact.
+  Worth stating plainly: this was the worst possible failure mode for this
+  product — the struggling patient is the target user, and the app was
+  refusing to credit a correct answer *because* they had been struggling.
