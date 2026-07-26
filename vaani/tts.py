@@ -14,9 +14,8 @@ import hashlib
 import logging
 import os
 
-import requests
-
 from .config import Config
+from .http_retry import post_with_retry
 from .langs import to_sarvam_lang
 
 log = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ class SarvamTTS:
             "Sarvam TTS: speaker=%s pace=%s lang=%s (req %s) text=%r -> %s",
             effective_speaker, effective_pace, lang, language_code, text, target,
         )
-        resp = requests.post(
+        resp = post_with_retry(
             _ENDPOINT,
             headers={
                 "api-subscription-key": self._key,
@@ -105,9 +104,6 @@ class SarvamTTS:
             },
             timeout=30,
         )
-        if not resp.ok:
-            log.error("Sarvam TTS %s error: %s", resp.status_code, resp.text)
-        resp.raise_for_status()
         audio_b64 = resp.json()["audios"][0]
         # Write via a temp file and rename: a half-written WAV left by a crash
         # would otherwise be served as a cache hit forever.

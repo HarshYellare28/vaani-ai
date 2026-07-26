@@ -350,6 +350,11 @@ button { font-family: inherit; color: inherit; }
 .fill.bad  { background: linear-gradient(90deg, #ef6a44, var(--warn)); }
 
 .feedback { font-size: 20px; font-weight: 700; margin: var(--sp-3) 0; text-align: center; line-height: 1.4; }
+.cue {
+  font-size: 15.5px; color: var(--ink-soft); text-align: center; line-height: 1.4;
+  margin: -6px 0 var(--sp-3); padding: 10px 16px; border-radius: var(--r-sm);
+  background: var(--primary-soft); border: 1px solid transparent;
+}
 .meta-line { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); background: var(--surface-2); border: 1px solid var(--line); padding: 4px 10px; border-radius: 8px; }
 .chip .ico { width: 13px; height: 13px; }

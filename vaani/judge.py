@@ -27,6 +27,7 @@ from typing import Optional
 import requests
 
 from .config import Config
+from .http_retry import post_with_retry
 from .textutils import classify
 
 log = logging.getLogger(__name__)
@@ -203,7 +204,7 @@ class SarvamJudge:
 
         for attempt in (1, 2):  # one retry — structured output isn't a hard guarantee
             try:
-                resp = requests.post(
+                resp = post_with_retry(
                     _ENDPOINT,
                     headers={
                         "api-subscription-key": self._key,
@@ -212,7 +213,6 @@ class SarvamJudge:
                     json=body,
                     timeout=12,
                 )
-                resp.raise_for_status()
                 choice = resp.json()["choices"][0]
                 content = choice["message"].get("content")
                 if not content or choice.get("finish_reason") == "length":

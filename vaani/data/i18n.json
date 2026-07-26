@@ -77,8 +77,8 @@
     },
     "feedback": {
       "correct": "Excellent!",
-      "no_speech": "I didn't hear you — '{word}'.",
-      "incorrect": "Once more, slowly — '{word}'."
+      "no_speech": "I didn't hear you. {word}.",
+      "incorrect": "Once more, slowly. {word}."
     }
   },
   "hi": {
@@ -159,8 +159,8 @@
     },
     "feedback": {
       "correct": "बहुत बढ़िया!",
-      "no_speech": "सुनाई नहीं दिया — '{word}'।",
-      "incorrect": "धीरे से, एक बार और — '{word}'।"
+      "no_speech": "सुनाई नहीं दिया। {word}।",
+      "incorrect": "धीरे से, एक बार और। {word}।"
     }
   },
   "kn": {
@@ -241,8 +241,8 @@
     },
     "feedback": {
       "correct": "ಚೆನ್ನಾಗಿದೆ!",
-      "no_speech": "ಕೇಳಿಸಲಿಲ್ಲ — '{word}'.",
-      "incorrect": "ನಿಧಾನವಾಗಿ, ಇನ್ನೊಮ್ಮೆ — '{word}'."
+      "no_speech": "ಕೇಳಿಸಲಿಲ್ಲ. {word}.",
+      "incorrect": "ನಿಧಾನವಾಗಿ, ಇನ್ನೊಮ್ಮೆ. {word}."
     }
   }
 }

@@ -19,9 +19,8 @@ from __future__ import annotations
 
 import logging
 
-import requests
-
 from .config import Config
+from .http_retry import post_with_retry
 from .langs import to_sarvam_lang
 from .models import AsrResult
 
@@ -55,17 +54,18 @@ class SarvamASR:
             "Sarvam ASR request: model=%s mode=%s lang=%s file=%s",
             data["model"], data["mode"], language_code or "auto", wav_path,
         )
+        # Read into bytes rather than streaming the file handle: a retry
+        # re-sends the request, and a handle already read to EOF on attempt 1
+        # would silently upload an empty file on attempt 2.
         with open(wav_path, "rb") as f:
-            resp = requests.post(
-                _ENDPOINT,
-                headers={"api-subscription-key": self._key},
-                files={"file": ("audio.wav", f, "audio/wav")},
-                data=data,
-                timeout=30,
-            )
-        if not resp.ok:
-            log.error("Sarvam ASR %s error: %s", resp.status_code, resp.text)
-        resp.raise_for_status()
+            wav_bytes = f.read()
+        resp = post_with_retry(
+            _ENDPOINT,
+            headers={"api-subscription-key": self._key},
+            files={"file": ("audio.wav", wav_bytes, "audio/wav")},
+            data=data,
+            timeout=30,
+        )
         body = resp.json()
         result = AsrResult(
             transcript=body.get("transcript", ""),

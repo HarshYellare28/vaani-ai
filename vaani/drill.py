@@ -34,6 +34,7 @@ class DrillResult:
     assessment: Assessment
     decision: Decision
     feedback_audio_path: str  # spoken feedback, ready to play
+    cue_hint: str = ""  # dynamic mode only — retry cue from the cueing hierarchy
 
 
 class StaticDrill:
@@ -209,6 +210,7 @@ class StaticDrill:
             assessment=assessment,
             decision=decision,
             feedback_audio_path=fb_path,
+            cue_hint=result.cue_hint,
         )
 
 

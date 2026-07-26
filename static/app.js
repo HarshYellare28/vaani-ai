@@ -516,6 +516,13 @@ function renderResult(d) {
 
   $("feedback-text").textContent = d.decision.feedback_text;
 
+  // Dynamic mode's retry cue — the cueing hierarchy from JUDGE.md, generated
+  // fresh per attempt (phonemic cue for a semantic error, a slow syllable
+  // model for a phonemic error, etc). Empty when the judge says correct.
+  const cueEl = $("cue-text");
+  cueEl.hidden = !(state.mode === "dynamic" && d.cue_hint);
+  if (!cueEl.hidden) cueEl.textContent = d.cue_hint;
+
   if (state.mode === "dynamic") {
     // The judge already picked what's next regardless of correctness — that
     // IS the adaptive behavior, so don't gate "Next" on getting it right.

@@ -394,6 +394,7 @@ async def evaluate(
         "language_probability": a.language_probability,
         "judge_error_type": a.judge_error_type,
         "judge_note": a.judge_note,
+        "cue_hint": result.cue_hint,  # dynamic mode retry cue; "" if correct or static mode
         "next_word": next_word,  # dynamic mode only; null otherwise (or if candidates ran out)
         "decision": {
             "action": d.action.value,
